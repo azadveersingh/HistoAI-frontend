@@ -7,15 +7,8 @@ import { toast } from "react-toastify";
 export default function UserManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
-
-  useEffect(() => {
-    const role = localStorage.getItem("role");
-    if (role !== "admin") {
-      navigate("/unauthorized");
-    }
-  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -52,7 +45,7 @@ export default function UserManagementPage() {
       {loading ? (
         <p>Loading users...</p>
       ) : (
-        <UserTable users={users} onToggleStatus={handleToggleStatus} />
+        <UserTable users={users} onToggleStatus={handleToggleStatus} onRoleChange={loadUsers} />
       )}
     </div>
   );

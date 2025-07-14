@@ -17,7 +17,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 // import SidebarWidget from "./SidebarWidget";
-
+const role = localStorage.getItem("role");
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -37,6 +37,16 @@ const navItems: NavItem[] = [
     name: "Projects",
     path: "/dashboard", // Previously was a subItem — now main
   },
+  ...(role === "admin"
+    ? [
+
+  {
+    icon:< UserCircleIcon />,
+    name :"All Users",
+    path:"/admin/users"
+  },
+]
+: []),
   
   // {
   //   icon: <CalenderIcon />,

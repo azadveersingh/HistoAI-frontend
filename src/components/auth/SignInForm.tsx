@@ -23,7 +23,13 @@ export default function SignInForm() {
       // Handle navigation/token saving here
 
       localStorage.setItem("token", res.access_token);
-      navigate ("/dashboard")
+      localStorage.setItem("role", res.role);
+      if (res.role === "admin") {
+        navigate("/admin/users");
+      } else {
+        navigate("/dashboard");
+      }
+      
     } catch (err) {
       console.error("Login failed", err);
     }
