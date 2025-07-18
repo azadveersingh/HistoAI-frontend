@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { fetchAllUsers, updateUserStatus } from "../../services/adminService";
 import UserTable from "../../components/UserTable";
 import { toast } from "react-toastify";
-
 export default function UserManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);

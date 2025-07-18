@@ -13,12 +13,18 @@ export const registerInit = async (firstName: string, lastName:string, email: st
 };
 
 export const signin = async (email: string, password: string) => {
-  const response = await axios.post(`${API_BASE}/api/login`, {
-    email,
-    password,
-  });
-  return response.data;
+  try {
+    const response = await axios.post(`${API_BASE}/api/login`, {
+      email,
+      password,
+    });
+    return response.data;
+  } catch (error: any) {
+    const msg = error?.response?.data?.message || "Login failed. Please try again.";
+    throw new Error(msg);
+  }
 };
+
 
 export const verifyOtp = async (otp: string, tempToken: string) => {
   const response = await axios.post(`${API_BASE}/api/register`, {

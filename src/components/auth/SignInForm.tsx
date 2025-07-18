@@ -10,13 +10,18 @@ import { signin } from "../../services/authService";
 
 export default function SignInForm() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("varenyam.experience@gmail.com");
+  const [email, setEmail] = useState("admin@gmail.com");
   const [password, setPassword] = useState("Gaurav1234")
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setMessage(null);
     try {
       const res = await signin(email, password);
       console.log("Login success:", res);
@@ -24,15 +29,20 @@ export default function SignInForm() {
 
       localStorage.setItem("token", res.access_token);
       localStorage.setItem("role", res.role);
+
+      setMessage(res.message || "Login successful!");
       if (res.role === "admin") {
         navigate("/admin/users");
       } else {
         navigate("/dashboard");
       }
-      
-    } catch (err) {
+
+    } catch (err: any) {
       console.error("Login failed", err);
+      const errorMsg = err?.message || "Something went wrong. Please try again.";
+      setError(errorMsg);
     }
+    
   };
   return (
     <div className="flex flex-col flex-1">
@@ -56,7 +66,20 @@ export default function SignInForm() {
             </p>
           </div>
           <div>
+          {message && (
+                <div className="mb-4 p-3 text-green-800 bg-green-100 border border-green-400 rounded">
+                  {message}
+                </div>
+              )}
+
+              {error && (
+                <div className="mb-4 p-3 text-red-800 bg-red-100 border border-red-400 rounded">
+                  {error}
+                </div>
+              )}
+
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
+              
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
                   width="20"
@@ -126,7 +149,7 @@ export default function SignInForm() {
                   </Label>
                   <div className="relative">
                     <Input
-                      value = {password}
+                      value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"

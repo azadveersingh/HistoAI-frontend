@@ -1,9 +1,10 @@
+// src/pages/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import AppSidebar from '../../layout/AppSidebar';
-import ProjectGrid from '../../components/Projects/ProjectGrid';
-import axios from 'axios';
 import PageMeta from '../../components/common/PageMeta';
 import ProjectDetailModal from '../../components/Projects/ProjectDetailModal';
+import ProjectList from '../../components/ProjectList';
+import { fetchProjectById } from '../../services/projectService';
 
 interface Project {
   _id: string;
@@ -18,8 +19,6 @@ interface ProjectDetails extends Project {
 }
 
 export default function Dashboard() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [search, setSearch] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [projectDetails, setProjectDetails] = useState<ProjectDetails | null>(null);
 
@@ -34,47 +33,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (selectedProjectId) {
-      axios
-        .get(`/api/projects/${selectedProjectId}`)
-        .then((res) => setProjectDetails(res.data))
+      fetchProjectById(selectedProjectId)
+        .then((res) => setProjectDetails(res))
         .catch((err) => console.error("Failed to fetch project details", err));
     }
   }, [selectedProjectId]);
 
-  useEffect(() => {
-    axios
-      .get('/api/projects')
-      .then((res) => setProjects(res.data.projects))
-      .catch((err) => console.error(err));
-  }, []);
-
-  const filtered = Array.isArray(projects)
-    ? projects.filter((p) =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-      )
-    : [];
-
   return (
-    <div className="flex bg-blue-50 dark:bg-gray-900 min-h-screen transition-colors duration-300">
+    <div className="flex bg-gray-200 dark:bg-gray-600 min-h-screen transition-colors duration-300">
       <PageMeta
         title="User Dashboard - HistoAI"
         description="This is a Web application based AI Tool named HistoAI."
       />
       <AppSidebar />
       <div className="flex-1 p-6 rounded-r-xl text-gray-900 dark:text-gray-100">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold bg-red-200 dark:bg-red-800 text-gray-900 dark:text-gray-100 px-4 py-2 rounded">
-            Projects
-          </h2>
-          <input
-            type="text"
-            placeholder="Search project"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 p-2 rounded-md shadow"
-          />
-        </div>
-        <ProjectGrid projects={filtered} onCardClick={handleCardClick} />
+        <ProjectList onProjectSelect={handleCardClick} />
       </div>
 
       {projectDetails && (

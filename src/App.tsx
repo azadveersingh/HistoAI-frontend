@@ -23,6 +23,11 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Unauthorized from "./pages/Unauthorized";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import CreateProjectPage from "./components/CreateProjectPage";
+import BookUpload from "./components/BookUpload";
+import CollectionCreate from "./components/Collections/CreateCollections";
+import CollectionManager from "./components/Collections/CollectionManager";
+
 
 export default function App() {
   return (
@@ -37,8 +42,29 @@ export default function App() {
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
+                <ProtectedRoute allowedRoles={["admin", "book_manager"]}>
                   <UserManagementPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
+            <Route path="/collections/create" element={<CollectionCreate />} />
+            <Route
+              path="/dashboard/collections"
+              element={
+                <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
+                  <CollectionManager />
+                </ProtectedRoute>
+              }
+            />
+
+
+
+            <Route
+              path="/books/upload"
+              element={
+                <ProtectedRoute allowedRoles={["book_manager"]}>
+                  <BookUpload />
                 </ProtectedRoute>
               }
             />
