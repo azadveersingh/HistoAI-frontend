@@ -14,6 +14,7 @@ export const fetchVisibleCollections = async () => {
   const response = await axios.get(`${API_BASE}/api/collections`, {
     headers: getAuthHeaders(),
   });
+  console.log("Fetched collections : ", response.data);
   return response.data.collections; // assuming response = { collections: [...] }
 };
 
@@ -30,7 +31,7 @@ export const createCollection = async (data: {
   name: string;
   bookIds: string[];
   projectId?: string;
-  memberIds: string[];
+  memberIds?: string[];
 }) => {
   const response = await axios.post(`${API_BASE}/api/collections`, data, {
     headers: getAuthHeaders(),
@@ -58,11 +59,22 @@ export const updateCollection = async (
   return response.data;
 };
 
-
 // ---------- 5. DELETE: Delete a collection (own collections only) ----------
 export const deleteCollection = async (collectionId: string) => {
   const response = await axios.delete(`${API_BASE}/api/collections/${collectionId}`, {
     headers: getAuthHeaders(),
   });
   return response.data;
+};
+
+// ---------- 6. POST: Add collections to a project ----------
+export const addCollectionsToProject = async (projectId: string, collectionIds: string[]) => {
+  const response = await axios.post(
+    `${API_BASE}/api/projects/${projectId}/collections`,
+    { collectionIds },
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+  return response.data; // should contain { message }
 };

@@ -22,10 +22,21 @@ export const uploadBooks = async (formData: FormData) => {
 
 // ------------------ 2. Get All Books (Admin/BM/PM/USER) ------------------
 export const fetchAllBooks = async () => {
-  const response = await axios.get(`${API_BASE}/api/books/`, {
-    headers: getAuthHeaders(),
-  });
-  return response.data.books;
+  try {
+    const response = await axios.get(`${API_BASE}/api/books/`, {
+      headers: getAuthHeaders(),
+    });
+    console.log("fetchAllBooks response:", response.data); // Debug log
+    const books = response.data.books || [];
+    if (!Array.isArray(books)) {
+      console.error("fetchAllBooks: Expected an array, got:", response.data.books);
+      return [];
+    }
+    return books;
+  } catch (error) {
+    console.error("fetchAllBooks error:", error);
+    throw error; // Re-throw to be handled by the caller
+  }
 };
 
 // ------------------ 3. Delete Book ------------------

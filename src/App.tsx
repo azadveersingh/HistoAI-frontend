@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -14,6 +14,7 @@ import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
+import SearchBar from "./components/form/input/SearchBar"
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -27,7 +28,16 @@ import CreateProjectPage from "./components/CreateProjectPage";
 import BookUpload from "./components/BookUpload";
 import CollectionCreate from "./components/Collections/CreateCollections";
 import CollectionManager from "./components/Collections/CollectionManager";
-
+import ProjectPage from "./components/Projects/ProjectPage";
+import ProjectCollections from "./components/Collections/ProjectCollections";
+import AllCollections from "./components/Collections/AllCollections";
+import ProjectBooks from "./components/Books/ProjectBooks";
+import AllBooks from "./components/Books/AllBooks";
+import ProjectMembers from "./components/Members/ProjectMembers";
+import AllMembers from "./components/Members/AllMembers";
+import ChatbotPage from "./components/Tools/Chatbot";
+import ToolsPage from "./components/Tools/ToolsPage";
+import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage"
 
 export default function App() {
   return (
@@ -36,7 +46,6 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route index path="/" element={<SignIn />} />
-          {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/dashboard" element={<Home />} />
             <Route
@@ -48,7 +57,7 @@ export default function App() {
               }
             />
             <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
-            <Route path="/collections/create" element={<CollectionCreate />} />
+            <Route path="/collections/create/:id" element={<CollectionCreate />} />
             <Route
               path="/dashboard/collections"
               element={
@@ -57,9 +66,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
-
-
             <Route
               path="/books/upload"
               element={
@@ -68,36 +74,49 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/project/:id" element={<ProjectPage />}>
+              <Route
+                path="collections/add"
+                element={<div><ProjectCollections projectId={":id"} /><AllCollections /></div>}
+              />
+              <Route
+                path="books/add"
+                element={<div><ProjectBooks projectId={":id"} /><AllBooks /></div>}
+              />
+              <Route
+                path="members/add"
+                element={<div><ProjectMembers projectId={":id"} /><AllMembers /></div>}
+              />
+            <Route
+                path="chatbot"
+                element={<ChatbotPage projectId={":id"} />}
+              />
+              <Route
+                path="tools/welcome"
+                element={<ToolsPage projectId={":id"} />}
+              />
+              <Route path="tools/welcome" element={<ToolsWelcomePage />} />
+              <Route path="chatbot/welcome" element={<ToolsWelcomePage />} />
+            </Route>
 
-            {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
-
-            {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
-
-            {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
             <Route path="/badge" element={<Badges />} />
             <Route path="/buttons" element={<Buttons />} />
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
-
-            {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
+            <Route path = "SearchBar" element={<SearchBar/>} />
           </Route>
-
-          {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-
-          {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>

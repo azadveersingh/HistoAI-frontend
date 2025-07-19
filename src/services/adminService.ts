@@ -8,6 +8,7 @@ export const fetchAllUsers = async () => {
         Authorization:`Bearer ${token}`,
     },
   });
+  console.log("All Users :",response.data)
   return response.data;
 };
 
