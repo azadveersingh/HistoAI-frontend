@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Modal } from "../../components/ui/modal";
 import ComponentCard from "../../components/common/ComponentCard";
 import Checkbox from "../../components/form/input/Checkbox";
 import Button from "../../components/ui/button/Button";
@@ -21,7 +20,6 @@ interface ToolsPageProps {
 }
 
 export default function ToolsPage({ projectId }: ToolsPageProps) {
-  const [isModalOpen, setIsModalOpen] = useState(true);
   const [collections, setCollections] = useState<Collection[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
@@ -61,12 +59,11 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
     );
   };
 
-  const handleProceed = () => {
-    setIsModalOpen(false);
+  const handleProceed = (tool: 'data-extraction' | 'chatbot' | 'knowledge-graph') => {
     // Construct URL with query parameters
     const url = `/project/${projectId}/tools/welcome?collections=${encodeURIComponent(
       selectedCollections.join(",")
-    )}&books=${encodeURIComponent(selectedBooks.join(","))}`;
+    )}&books=${encodeURIComponent(selectedBooks.join(","))}&tool=${encodeURIComponent(tool)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
@@ -74,16 +71,17 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
   if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
 
   return (
-    <ComponentCard title="Project Tools">
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} className="max-w-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Select Project Items</h2>
+    <ComponentCard title="Project Tools" className="p-6">
+      <h2 className="text-xl font-semibold mb-4">Select Project Items</h2>
 
-        <div className="mb-6">
+      <div className="flex flex-col md:flex-row gap-6 mb-6">
+        {/* Collections List */}
+        <div className="flex-1">
           <h3 className="text-lg font-medium mb-2">Collections</h3>
           {collections.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No collections available</p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
               {collections.map((col) => (
                 <Checkbox
                   key={col._id}
@@ -97,12 +95,13 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
           )}
         </div>
 
-        <div className="mb-6">
+        {/* Books List */}
+        <div className="flex-1">
           <h3 className="text-lg font-medium mb-2">Books</h3>
           {books.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No books available</p>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
               {books.map((book) => (
                 <Checkbox
                   key={book._id}
@@ -115,17 +114,31 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
             </div>
           )}
         </div>
+      </div>
 
-        <div className="flex justify-end">
-          <Button
-            onClick={handleProceed}
-            disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
-            variant="primary"
-          >
-            Proceed
-          </Button>
-        </div>
-      </Modal>
+      <div className="flex justify-end gap-2">
+        <Button
+          onClick={() => handleProceed('data-extraction')}
+          disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
+          variant="primary"
+        >
+          Data Extraction
+        </Button>
+        <Button
+          onClick={() => handleProceed('chatbot')}
+          disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
+          variant="primary"
+        >
+          Chatbot
+        </Button>
+        <Button
+          onClick={() => handleProceed('knowledge-graph')}
+          disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
+          variant="primary"
+        >
+          Knowledge Graph
+        </Button>
+      </div>
     </ComponentCard>
   );
 }
