@@ -53,7 +53,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
     {
       icon: <BoxCubeIcon />,
       name: 'Use Tools',
-      path: `/${projectId}/tools`,
+      path: `/project/${projectId}/tools/welcome`,
     },
     
   ];
