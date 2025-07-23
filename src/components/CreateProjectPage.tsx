@@ -53,7 +53,7 @@ export default function CreateProjectPage() {
       console.log("Response : ",res)
       toast.success("Project Created!");
       const projectId = res.projectId || res._id; 
-      navigate("/collections/create",{
+      navigate("/dashboard",{
         state:{
           projectId,
           // memberIds,

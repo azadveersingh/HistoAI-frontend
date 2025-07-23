@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchVisibleCollections } from "../../services/collectionServices";
+import { fetchVisibleCollections, removeCollectionsFromProject } from "../../services/collectionServices";
 import { fetchAllBooks } from "../../services/bookServices";
 import ComponentCard from "../../components/common/ComponentCard";
 import Checkbox from "../../components/form/input/Checkbox";
@@ -29,22 +29,22 @@ interface Book {
 
 interface ProjectCollectionsProps {
   projectId: string;
-  SearchQuery: string;
+  searchQuery: string;
 }
 
-export default function ProjectCollections({ projectId }: ProjectCollectionsProps) {
+export default function ProjectCollections({ projectId, searchQuery }: ProjectCollectionsProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [checkedCollections, setCheckedCollections] = useState<string[]>([]);
   const [initialCheckedCollections, setInitialCheckedCollections] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [alert, setAlert] = useState<{ variant: any; title: string; message: string } | null>(null);
-
+  const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedBookList, setSelectedBookList] = useState<Book[]>([]);
   const [modalTitle, setModalTitle] = useState("");
+
+  console.log("search query at project collections ", searchQuery);
 
   useEffect(() => {
     const loadData = async () => {
@@ -63,7 +63,7 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
         setCollections(filteredCollections);
         setBooks(allBooks);
         setCheckedCollections(ids);
-        setInitialCheckedCollections(ids); // Save initial for diff comparison
+        setInitialCheckedCollections(ids);
       } catch (err) {
         console.error(err);
         setError("Failed to load project collections");
@@ -102,17 +102,7 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
     if (!confirm) return;
 
     try {
-      for (const collectionId of removed) {
-        const response = await fetch(`/api/projects/${projectId}/collections/${collectionId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to remove collection");
-      }
+      await removeCollectionsFromProject(projectId, removed);
 
       setCollections((prev) => prev.filter((col) => !removed.includes(col._id)));
       setInitialCheckedCollections((prev) => prev.filter((id) => !removed.includes(id)));
@@ -123,12 +113,12 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
         title: "Collections Removed",
         message: `${removed.length} collection(s) removed from the project.`,
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setAlert({
         variant: "error",
         title: "Error",
-        message: "An error occurred while removing collections.",
+        message: err.response?.data?.error || "An error occurred while removing collections.",
       });
     }
   };
@@ -154,8 +144,14 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
     }
   };
 
+  // Filter collections based on searchQuery
+  const filteredCollections = collections.filter((collection) =>
+    collection.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // Check if there are any changes by comparing checkedCollections with initialCheckedCollections
-  const hasChanges = checkedCollections.length !== initialCheckedCollections.length ||
+  const hasChanges =
+    checkedCollections.length !== initialCheckedCollections.length ||
     checkedCollections.some((id) => !initialCheckedCollections.includes(id)) ||
     initialCheckedCollections.some((id) => !checkedCollections.includes(id));
 
@@ -176,22 +172,22 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
         <Table className="border-collapse">
           <TableHeader className="bg-gray-100 dark:bg-gray-800">
             <TableRow>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Select
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Collection Name
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 No. of Books
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Created At
               </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {collections.map((collection) => (
+            {filteredCollections.map((collection) => (
               <TableRow
                 key={collection._id}
                 className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
@@ -219,9 +215,9 @@ export default function ProjectCollections({ projectId }: ProjectCollectionsProp
           </TableBody>
         </Table>
 
-        {collections.length === 0 && (
+        {filteredCollections.length === 0 && (
           <div className="text-gray-500 dark:text-gray-400 text-center py-4">
-            No collections added to this project
+            No collections found matching your search
           </div>
         )}
 

@@ -1,4 +1,5 @@
-import { Navigate } from "react-router";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthProvider";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -6,14 +7,20 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const token = localStorage.getItem("token");
-  const role = localStorage.getItem("role");
+  const { user, loading, token } = useAuth(); // Get user and loading state from AuthProvider
+  // Show a loading state while checking authentication
+  if (loading) {
+    return <div>Loading...</div>; // Or replace with a proper loading component
+  }
 
-  if (!token) {
+  // If no user is authenticated, redirect to sign-in
+  if (!user) {
     return <Navigate to="/signin" replace />;
   }
 
-  if (!allowedRoles.includes(role || "")) {
+  const role = localStorage.getItem('role')
+  // If the user's role is not allowed, redirect to unauthorized page
+  if (!allowedRoles.includes(role)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

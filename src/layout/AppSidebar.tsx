@@ -19,8 +19,11 @@ import {
   UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-// import SidebarWidget from "./SidebarWidget";
+
+// Get the user object from localStorage
 const role = localStorage.getItem("role");
+
+
 type NavItem = {
   name: string;
   icon: React.ReactNode;
@@ -29,12 +32,6 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  // {
-  //   icon: <GridIcon />,
-  //   name: "Dashboard",
-  //   subItems: [{ name: "Projects", path: "/dashboard", pro: false }],
-  // },
-
   {
     icon: <GridIcon />,
     name: "Projects",
@@ -42,15 +39,13 @@ const navItems: NavItem[] = [
   },
   ...(role === "admin"
     ? [
-
       {
-        icon: < UserCircleIcon />,
+        icon: <UserCircleIcon />,
         name: "All Users",
         path: "/admin/users"
       },
     ]
     : []),
-
   ...(role === "project_manager" || role === "book_manager"
     ? [
       {
@@ -60,115 +55,31 @@ const navItems: NavItem[] = [
       },
     ]
     : []),
-
-
-
   ...(role === "book_manager"
     ? [
       {
         icon: <PageIcon />,
-        name: "Upload Books",
-        path: "/books/upload",
+        name: "Manage Books",
+        path: "/books/manage",
       },
     ]
     : []),
-
   ...(role === "project_manager" || role === "book_manager"
     ? [
       {
         icon: <PageIcon />,
-        name: "Manage Collections",
-        path: "", // no path, will open modal
+        name: "View Collections",
+        path: "/dashboard/collections", // Updated to navigate to AllCollections page
       },
     ]
     : []),
-
-
-  // ...(role === "project_manager" || role === "book_manager"
-  //   ? [
-  //     {
-  //       icon: <PageIcon />,
-  //       name: "Create Collection",
-  //       path: "/collections/create",
-  //     },
-  //   ]
-  //   : []),
-  // ...(role === "project_manager" || role === "book_manager"
-  //   ? [
-  //     {
-  //       icon: <PageIcon />,
-  //       name: "View Collection",
-  //       path: "/dashboard/collections",
-  //     },
-  //   ]
-  //   : []),
-
-
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "/calendar",
-  // },
-  // {
-  //   icon: <UserCircleIcon />,
-  //   name: "User Profile",
-  //   path: "/profile",
-  // },
-  // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  // },
-  // {
-  //   name: "Tables",
-  //   icon: <TableIcon />,
-  //   subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  // },
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "Blank Page", path: "/blank", pro: false },
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //   ],
-  // },
 ];
 
-const othersItems: NavItem[] = [
-  // {
-  //   icon: <PieChartIcon />,
-  //   name: "Charts",
-  //   subItems: [
-  //     { name: "Line Chart", path: "/line-chart", pro: false },
-  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <BoxCubeIcon />,
-  //   name: "UI Elements",
-  //   subItems: [
-  //     { name: "Alerts", path: "/alerts", pro: false },
-  //     { name: "Avatar", path: "/avatars", pro: false },
-  //     { name: "Badge", path: "/badge", pro: false },
-  //     { name: "Buttons", path: "/buttons", pro: false },
-  //     { name: "Images", path: "/images", pro: false },
-  //     { name: "Videos", path: "/videos", pro: false },
-  //   ],
-  // },
-  // {
-  //   icon: <PlugInIcon />,
-  //   name: "Authentication",
-  //   subItems: [
-  //     { name: "Sign In", path: "/signin", pro: false },
-  //     { name: "Sign Up", path: "/signup", pro: false },
-  //   ],
-  // },
-];
+const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -179,17 +90,13 @@ const AppSidebar: React.FC = () => {
     navigate(path);
   };
 
-
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -280,18 +187,6 @@ const AppSidebar: React.FC = () => {
                 />
               )}
             </button>
-          ) : nav.name === "Manage Collections" ? (
-            <span
-              onClick={openManageModal}
-              className={`menu-item group cursor-pointer ${"menu-item-inactive"}`}
-            >
-              <span className={`menu-item-icon-size menu-item-icon-inactive`}>
-                {nav.icon}
-              </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
-              )}
-            </span>
           ) : nav.path ? (
             <Link
               to={nav.path}
@@ -369,7 +264,6 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
-
   return (
     <>
       <aside
@@ -389,7 +283,6 @@ const AppSidebar: React.FC = () => {
           className={`py-0 flex ${!isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
             }`}
         >
-          {/* ------------------------------------------------Logo------------------------------------------------ */}
           <Link to="/">
             {isExpanded || isHovered || isMobileOpen ? (
               <>
@@ -402,7 +295,6 @@ const AppSidebar: React.FC = () => {
                   height={40}
                 />
               </>
-
             ) : (
               <>
                 <img
@@ -420,49 +312,20 @@ const AppSidebar: React.FC = () => {
           <nav className="mb-6">
             <div className="flex flex-col gap-4">
               <div>
-                {/* <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <HorizontaLDots className="size-6" />
-                )}
-              </h2> */}
                 {renderMenuItems(navItems, "main")}
               </div>
-              <div className="">
-                {/* <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-red-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2> */}
+              <div>
                 {renderMenuItems(othersItems, "others")}
               </div>
             </div>
           </nav>
-          {/* {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null} */}
         </div>
-
       </aside>
       <ManageCollectionModal
         isOpen={isManageModalOpen}
         onClose={closeManageModal}
         onNavigate={handleNavigate}
       />
-
     </>
   );
 };

@@ -10,6 +10,7 @@ interface Project {
 type ProjectGridProps = {
   projects: Project[];
   onCardClick: (id: string) => void;
+  onUpdateName: (id: string, newName: string) => void;
 };
 
 const formatProjectDetails = (project: Project) => {
@@ -32,12 +33,12 @@ const formatProjectDetails = (project: Project) => {
     },
     {
       label: 'Created',
-      value: new Date(project.createdAt).toLocaleDateString(),
+      value: new Date(project.createdAt).toLocaleString(),
     },
   ];
 };
 
-const ProjectGrid: FC<ProjectGridProps> = ({ projects, onCardClick }) => {
+const ProjectGrid: FC<ProjectGridProps> = ({ projects, onCardClick, onUpdateName }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-4">
       {projects.length > 0 ? (
@@ -48,6 +49,7 @@ const ProjectGrid: FC<ProjectGridProps> = ({ projects, onCardClick }) => {
             name={project.name}
             details={formatProjectDetails(project)}
             onClick={() => onCardClick(project._id)}
+            onUpdateName={onUpdateName}
           />
         ))
       ) : (

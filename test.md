@@ -51,7 +51,7 @@ async function sendEmails(config, emails, subject, content, isHtml) {
       user: config.client_email,
       serviceClient: config.client_id,
       privateKey: config.private_key,
-      accessToken: config.access_token
+      accessToken: config.token
     }
   });
 

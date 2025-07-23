@@ -3,9 +3,10 @@ import { Link, useLocation } from 'react-router-dom';
 import { useSidebar } from '../../context/SidebarContext';
 import {
   BoxCubeIcon,
-  PageIcon,
   UserCircleIcon,
   ChatIcon,
+  FolderIcon,
+  FileIcon,
 } from '../../icons';
 
 interface ProjectSidebarProps {
@@ -27,12 +28,12 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
 
   const navItems: NavItem[] = [
     {
-      icon: <PageIcon />,
+      icon: <FolderIcon />,
       name: 'Add Collections',
       path: `/project/${projectId}/collections/add`,
     },
     {
-      icon: <PageIcon />,
+      icon: <FileIcon />,
       name: 'Add Books',
       path: `/project/${projectId}/books/add`,
     },
@@ -44,14 +45,17 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
     {
       icon: <ChatIcon />,
       name: 'Chatbot',
-      path: `/project/${projectId}/chatbot/welcome`,
+      // path: `/project/${projectId}/chatbot/welcome`,
+      path:`/${projectId}/chatbot`,
+      // path:"/chatbot",
       openInNewTab: true,
     },
     {
       icon: <BoxCubeIcon />,
       name: 'Use Tools',
-      path: `/project/${projectId}/tools`,
+      path: `/${projectId}/tools`,
     },
+    
   ];
 
   const isActive = useCallback(

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Modal } from "../components/ui/modal/index";
 import Button from "../components/ui/button/Button";
-// import { uploadBooks } from "../services/uploadBooks";
+import { uploadBooks } from "../services/bookServices";
 
 interface BookDetailsModalProps {
   isOpen: boolean;
@@ -36,6 +36,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<BookFormData>({});
   const [activeFile, setActiveFile] = useState<string | null>(null);
+  const role = localStorage.getItem("role");
 
   useEffect(() => {
     setFormData((prev) => {
@@ -65,32 +66,55 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (role !== "book_manager") {
+      setError("Only book managers can upload books.");
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     setError("");
     setSuccess(false);
+
+    // Debug: Log files array
+    console.log("Files to upload:", files.map((f) => ({ name: f.name, size: f.size, type: f.type })));
+
+    if (files.length === 0) {
+      setError("No files selected for upload.");
+      setIsSubmitting(false);
+      return;
+    }
 
     const hasEmptyFields = files.some((file) => {
       const data = formData[file.name];
       return !data.bookName || !data.author;
     });
 
-    if (hasEmptyFields || files.length === 0) {
+    if (hasEmptyFields) {
       setError("Please fill in all fields marked with * for each book.");
       setIsSubmitting(false);
       return;
     }
 
-    const uploadData = new FormData();
-    files.forEach((file) => {
-      const data = formData[file.name];
-      uploadData.append("bookName", data.bookName.toUpperCase());
-      uploadData.append("author", data.author.toUpperCase());
-      uploadData.append("edition", data.edition.toUpperCase());
-      uploadData.append("files", file);
-    });
-
     try {
-      await uploadBooks(uploadData);
+      // Process each file individually to match backend's current logic
+      for (const file of files) {
+        const uploadData = new FormData();
+        const data = formData[file.name];
+        uploadData.append("files", file); // Use 'files' to match backend expectation
+        uploadData.append("bookName", data.bookName.toUpperCase());
+        uploadData.append("author", data.author.toUpperCase());
+        uploadData.append("edition", data.edition.toUpperCase());
+
+        // Debug: Log FormData content for this file
+        console.log(`FormData for ${file.name}:`);
+        for (let [key, value] of uploadData.entries()) {
+          console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
+        }
+
+        await uploadBooks(uploadData);
+      }
+
       setSuccess(true);
       setFormData({});
       setFiles([]);
@@ -185,7 +209,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
           <Button
             variant="primary"
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || role !== "book_manager"}
             className="bg-green-500 hover:bg-green-600 text-white"
           >
             {isSubmitting ? "Processing..." : "Start Processing"}

@@ -67,14 +67,48 @@ export const deleteCollection = async (collectionId: string) => {
   return response.data;
 };
 
-// ---------- 6. POST: Add collections to a project ----------
-export const addCollectionsToProject = async (projectId: string, collectionIds: string[]) => {
-  const response = await axios.post(
-    `${API_BASE}/api/projects/${projectId}/collections`,
-    { collectionIds },
-    {
+export const fetchProjectCollections = async (projectId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE}/api/collections/projects/${projectId}/collections`, {
       headers: getAuthHeaders(),
+    });
+    console.log("fetchProjectCollections response:", response.data);
+    const collections = response.data.collections || [];
+    if (!Array.isArray(collections)) {
+      console.error("fetchProjectCollections: Expected an array, got:", response.data.collections);
+      return [];
     }
-  );
-  return response.data; // should contain { message }
+    return collections;
+  } catch (error) {
+    console.error("fetchProjectCollections error:", error);
+    throw error;
+  }
+};
+
+export const addCollectionsToProject = async (projectId: string, collectionIds: string[]) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE}/api/collections/${projectId}/add`,
+      { collectionIds },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("addCollectionsToProject error:", error);
+    throw error;
+  }
+};
+
+export const removeCollectionsFromProject = async (projectId: string, collectionIds: string[]) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE}/api/collections/${projectId}/remove`,
+      { collectionIds },
+      { headers: getAuthHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("removeCollectionsFromProject error:", error);
+    throw error;
+  }
 };

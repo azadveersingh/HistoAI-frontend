@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import ProjectGrid from './Projects/ProjectGrid';
-import { fetchMyProjects } from '../services/projectService';
+import { fetchMyProjects, updateProject } from '../services/projectService';
 import { fetchAllUsers } from '../services/adminService';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import  PageBreadCrumb  from "../components/common/PageBreadCrumb"
+import {useAuth} from "../context/AuthProvider"
 
 interface Project {
   _id: string;
@@ -29,6 +31,8 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
+
+  const {token} = useAuth();
 
   const getCurrentUserRole = (): string => {
     return localStorage.getItem('role') || 'guest';
@@ -62,6 +66,10 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
         const users = await fetchAllUsers();
         const userMap = new Map(users.map((u: any) => [u._id, u.fullName]));
     
+        projectsData.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
         const enrichedProjects = projectsData.map((project) => ({
           ...project,
           createdByName: userMap.get(project.createdBy) || 'Unknown',
@@ -88,11 +96,24 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
     navigate(`/project/${id}`);
   };
 
+  const handleUpdateName = async (id: string, newName: string) => {
+    try {
+      await updateProject(id, { name: newName });
+      setProjects((prev) =>
+        prev.map((project) =>
+          project._id === id ? { ...project, name: newName } : project
+        )
+      );
+    } catch (err) {
+      console.error('Error updating project name:', err);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-          All Projects
+          All Created Projects
         </h2>
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
@@ -115,7 +136,12 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
           )}
         </div>
       </div>
-      <ProjectGrid projects={filteredProjects} onCardClick={handleProjectSelect} />
+      <PageBreadCrumb pageTitle="Project List" />
+      <ProjectGrid 
+        projects={filteredProjects} 
+        onCardClick={handleProjectSelect} 
+        onUpdateName={handleUpdateName}
+      />
     </div>
   );
 };

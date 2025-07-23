@@ -9,12 +9,16 @@ import {
   TableCell,
 } from "../../components/ui/table";
 import Alert from "../../components/ui/alert/Alert";
+import { fetchProjectMembers, removeMembersFromProject } from "../../services/adminService";
 
 interface Member {
   _id: string;
-  name: string;
+  fullName: string;
+  email: string;
   role: string;
-  projectId?: string;
+  isActive: boolean;
+  isBlocked: boolean;
+  createdAt: string;
 }
 
 interface ProjectMembersProps {
@@ -27,22 +31,31 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
   const [initialCheckedMembers, setInitialCheckedMembers] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [alert, setAlert] = useState<{ variant: any; title: string; message: string } | null>(null);
+  const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
 
   useEffect(() => {
     const loadProjectMembers = async () => {
+      if (!projectId) {
+        setError("No project ID provided");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        // Replace with actual API call to fetch members for the project
-        const data: Member[] = []; // Placeholder: fetch members from API
-        const projectMembers = data.filter((member) => member.projectId === projectId);
-        const ids = projectMembers.map((m) => m._id);
+        const projectMembers = await fetchProjectMembers(projectId);
+        console.log("Project members:", projectMembers);
+        if (projectMembers.length === 0) {
+          console.warn(`No members found for projectId: ${projectId}`);
+        }
+        const ids = projectMembers.map((m: Member) => m._id);
         setMembers(projectMembers);
         setCheckedMembers(ids);
-        setInitialCheckedMembers(ids); // Save initial for diff comparison
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load project members");
+        setInitialCheckedMembers(ids);
+      } catch (err: any) {
+        const errorMessage = err.response?.data?.error || err.message || "Failed to load project members";
+        setError(errorMessage);
+        console.error("Error fetching project members:", err);
       } finally {
         setLoading(false);
       }
@@ -57,10 +70,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
   };
 
   const handleSaveChanges = async () => {
-    const removed = initialCheckedMembers.filter(
-      (id) => !checkedMembers.includes(id)
-    );
-
+    const removed = initialCheckedMembers.filter((id) => !checkedMembers.includes(id));
     if (removed.length === 0) {
       setAlert({
         variant: "info",
@@ -77,44 +87,32 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     if (!confirm) return;
 
     try {
-      for (const memberId of removed) {
-        const response = await fetch(`/api/projects/${projectId}/members/${memberId}`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to remove member");
-      }
-
+      await removeMembersFromProject(projectId, removed);
       setMembers((prev) => prev.filter((member) => !removed.includes(member._id)));
       setInitialCheckedMembers((prev) => prev.filter((id) => !removed.includes(id)));
       setCheckedMembers((prev) => prev.filter((id) => !removed.includes(id)));
-
       setAlert({
         variant: "success",
         title: "Members Removed",
         message: `${removed.length} member(s) removed from the project.`,
       });
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error("Error removing members:", err);
       setAlert({
         variant: "error",
         title: "Error",
-        message: "An error occurred while removing members.",
+        message: err.response?.data?.error || "An error occurred while removing members.",
       });
     }
   };
 
-  // Check if there are any changes by comparing checkedMembers with initialCheckedMembers
-  const hasChanges = checkedMembers.length !== initialCheckedMembers.length ||
+  const hasChanges =
+    checkedMembers.length !== initialCheckedMembers.length ||
     checkedMembers.some((id) => !initialCheckedMembers.includes(id)) ||
     initialCheckedMembers.some((id) => !checkedMembers.includes(id));
 
   if (loading) return <div>Loading project members...</div>;
-  if (error) return <div>{error}</div>;
+  if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
 
   return (
     <ComponentCard title="Project Members">
@@ -137,36 +135,42 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
                 Member Name
               </TableCell>
               <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+                Email
+              </TableCell>
+              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
                 Role
               </TableCell>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {members.map((member) => (
-              <TableRow
-                key={member._id}
-                className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-              >
-                <TableCell className="p-4">
-                  <Checkbox
-                    id={`member-${member._id}`}
-                    checked={checkedMembers.includes(member._id)}
-                    onChange={(checked) => handleCheckboxChange(member._id, checked)}
-                    label=""
-                  />
+            {members.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                  No members found for this project
                 </TableCell>
-                <TableCell className="p-4">{member.name}</TableCell>
-                <TableCell className="p-4">{member.role}</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              members.map((member) => (
+                <TableRow
+                  key={member._id}
+                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+                >
+                  <TableCell className="p-4">
+                    <Checkbox
+                      id={`member-${member._id}`}
+                      checked={checkedMembers.includes(member._id)}
+                      onChange={(checked) => handleCheckboxChange(member._id, checked)}
+                      label=""
+                    />
+                  </TableCell>
+                  <TableCell className="p-4">{member.fullName}</TableCell>
+                  <TableCell className="p-4">{member.email}</TableCell>
+                  <TableCell className="p-4 capitalize">{member.role}</TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-
-        {members.length === 0 && (
-          <div className="text-gray-500 dark:text-gray-400 text-center py-4">
-            No members added to this project
-          </div>
-        )}
 
         <div className="mt-4 text-right">
           <button

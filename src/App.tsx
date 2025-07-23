@@ -14,7 +14,7 @@ import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
 import BasicTables from "./pages/Tables/BasicTables";
 import FormElements from "./pages/Forms/FormElements";
-import SearchBar from "./components/form/input/SearchBar"
+import SearchBar from "./components/form/input/SearchBar";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -37,32 +37,51 @@ import ProjectMembers from "./components/Members/ProjectMembers";
 import AllMembers from "./components/Members/AllMembers";
 import ChatbotPage from "./components/Tools/Chatbot";
 import ToolsPage from "./components/Tools/ToolsPage";
-import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage"
+import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage";
+import BookUploadManager from "./components/Books/BookUploadManager";
+import { AuthProvider } from "./context/AuthProvider";
 
 export default function App() {
   return (
-    <>
+    <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
           <Route index path="/" element={<SignIn />} />
+          <Route
+            path="/:projectId/chatbot"
+            element={<ChatbotPage projectId={":id"} />}
+          />
+          <Route
+            path="/:projectId/welcome"
+            element={<ToolsPage projectId={":id"} />}
+          />
           <Route element={<AppLayout />}>
             <Route index path="/dashboard" element={<Home />} />
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute allowedRoles={["admin", "book_manager"]}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <UserManagementPage />
                 </ProtectedRoute>
               }
             />
             <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
+            <Route path="/collections/create" element={<CollectionCreate />} /> {/* New route */}
             <Route path="/collections/create/:id" element={<CollectionCreate />} />
             <Route
               path="/dashboard/collections"
               element={
                 <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
-                  <CollectionManager />
+                  <AllCollections />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/books/manage"
+              element={
+                <ProtectedRoute allowedRoles={["book_manager"]}>
+                  <BookUploadManager />
                 </ProtectedRoute>
               }
             />
@@ -87,18 +106,9 @@ export default function App() {
                 path="members/add"
                 element={<div><ProjectMembers projectId={":id"} /><AllMembers /></div>}
               />
-            <Route
-                path="chatbot"
-                element={<ChatbotPage projectId={":id"} />}
-              />
-              <Route
-                path="tools/welcome"
-                element={<ToolsPage projectId={":id"} />}
-              />
               <Route path="tools/welcome" element={<ToolsWelcomePage />} />
               <Route path="chatbot/welcome" element={<ToolsWelcomePage />} />
             </Route>
-
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
@@ -113,7 +123,7 @@ export default function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
-            <Route path = "SearchBar" element={<SearchBar/>} />
+            <Route path="SearchBar" element={<SearchBar />} />
           </Route>
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
@@ -121,6 +131,6 @@ export default function App() {
         </Routes>
       </Router>
       <ToastContainer />
-    </>
+    </AuthProvider>
   );
 }

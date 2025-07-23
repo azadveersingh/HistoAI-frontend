@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import DropzoneComponent from "../components/form/form-elements/DropZone";
 import Button from "../components/ui/button/Button";
 import BookDetailsModal from "./BookDetailsModal";
+import PageBreadcrumb from "./common/PageBreadCrumb";
 
 const BookUpload: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
@@ -10,7 +11,7 @@ const BookUpload: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
-  const handleDrop = (acceptedFiles: File[]) => {
+  const handleDrop = useCallback((acceptedFiles: File[]) => {
     let totalSize = 0;
     const validFiles: File[] = [];
 
@@ -32,11 +33,28 @@ const BookUpload: React.FC = () => {
       setError("");
     }
 
+    console.log("handleDrop: Valid files:", validFiles.map((f) => ({ name: f.name, size: f.size, type: f.type })));
     setFiles(validFiles);
+  }, []);
+
+  const handleModalOpen = () => {
+    if (files.length === 0) {
+      setError("No files selected. Please add files before proceeding.");
+      return;
+    }
+    console.log("Opening modal with files:", files.map((f) => ({ name: f.name, size: f.size, type: f.type })));
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    // Do not clear files here to prevent accidental loss
+    console.log("Modal closed, current files:", files.map((f) => ({ name: f.name, size: f.size, type: f.type })));
   };
 
   return (
     <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+      <PageBreadcrumb pageTitle="Book Upload" />
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700">
           <h2 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
@@ -68,7 +86,7 @@ const BookUpload: React.FC = () => {
           <div className="flex justify-end mt-8">
             <Button
               variant="primary"
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleModalOpen}
               disabled={files.length === 0 || isSubmitting}
               className="px-6 py-2 text-white font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md"
             >
@@ -87,7 +105,7 @@ const BookUpload: React.FC = () => {
 
         <BookDetailsModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleModalClose}
           files={files}
           setFiles={setFiles}
           setSuccess={setSuccess}
