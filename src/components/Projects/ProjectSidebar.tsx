@@ -45,9 +45,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
     {
       icon: <ChatIcon />,
       name: 'Chatbot',
-      // path: `/project/${projectId}/chatbot/welcome`,
-      path:`/${projectId}/chatbot`,
-      // path:"/chatbot",
+      path: `/${projectId}/chatbot`,
       openInNewTab: true,
     },
     {
@@ -55,7 +53,6 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
       name: 'Use Tools',
       path: `/project/${projectId}/tools/welcome`,
     },
-    
   ];
 
   const isActive = useCallback(
@@ -64,7 +61,10 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
   );
 
   const handleNavClick = (nav: NavItem) => {
-    onSelectOption(nav.name);
+    // Only update selectedOption for non-new-tab items
+    if (!nav.openInNewTab) {
+      onSelectOption(nav.name);
+    }
     if (nav.openInNewTab) {
       window.open(nav.path, '_blank', 'noopener,noreferrer');
     }
