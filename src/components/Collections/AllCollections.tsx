@@ -14,6 +14,8 @@ import {
 } from "../../components/ui/table";
 import { Modal } from "../../components/ui/modal/index";
 import Alert from "../../components/ui/alert/Alert";
+import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
+import ConfirmDialogWithInput from "../../components/ui/confirmation/ConfirmDialogWithInput";
 
 interface Collection {
   _id: string;
@@ -47,6 +49,8 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
   const [showModal, setShowModal] = useState(false);
   const [selectedBookList, setSelectedBookList] = useState<Book[]>([]);
   const [modalTitle, setModalTitle] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showInputDialog, setShowInputDialog] = useState(false);
 
   const isDashboardCollections = location.pathname === "/dashboard/collections";
 
@@ -105,8 +109,12 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
       return;
     }
 
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmAdd = async () => {
     try {
-      await addCollectionsToProject(projectId, checkedCollections);
+      await addCollectionsToProject(projectId!, checkedCollections);
       setProjectCollectionIds((prev) => [...prev, ...checkedCollections]);
       setCheckedCollections([]);
       setAlert({
@@ -121,6 +129,8 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
         title: "Error",
         message: err.response?.data?.error || "An error occurred while adding collections to the project.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -134,6 +144,15 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
       return;
     }
 
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmRemove = () => {
+    setShowConfirmDialog(false);
+    setShowInputDialog(true);
+  };
+
+  const handleConfirmInput = async () => {
     try {
       for (const collectionId of checkedCollections) {
         await deleteCollection(collectionId);
@@ -152,6 +171,8 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
         title: "Error",
         message: err.response?.data?.error || "An error occurred while removing collections.",
       });
+    } finally {
+      setShowInputDialog(false);
     }
   };
 
@@ -202,13 +223,36 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
         ) : (
           <div className="flex justify-between items-center">
             <span>All Collections</span>
-            <Button
-              onClick={handleCreateCollection}
-              variant="primary"
-              className="text-sm py-1 px-3 bg-green-500 hover:bg-green-400 text-white"
-            >
-              Create Collection
-            </Button>
+            <div className="flex items-center gap-2">
+              {isDashboardCollections ? (
+                <Button
+                  onClick={handleRemoveCollections}
+                  disabled={checkedCollections.length === 0}
+                  variant="primary"
+                  title={checkedCollections.length === 0 ? "Select at least one collection to remove" : ""}
+                  className="text-sm py-1 px-3 bg-red-500 hover:bg-red-600 text-white"
+                >
+                  Remove Collection
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleAddToProject}
+                  disabled={checkedCollections.length === 0 || !projectId}
+                  variant="primary"
+                  title={checkedCollections.length === 0 ? "Select at least one collection to add" : ""}
+                  className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  Add Selected to Project
+                </Button>
+              )}
+              <Button
+                onClick={handleCreateCollection}
+                variant="primary"
+                className="text-sm py-1 px-3 bg-green-500 hover:bg-green-600 text-white"
+              >
+                Create Collection
+              </Button>
+            </div>
           </div>
         )
       }
@@ -260,6 +304,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                             checked={true}
                             disabled={true}
                             onChange={() => {}}
+                            label=""
                           />
                         </div>
                       ) : (
@@ -267,6 +312,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                           id={`collection-${collection._id}`}
                           checked={checkedCollections.includes(collection._id)}
                           onChange={(checked) => handleCheckboxChange(collection._id, checked)}
+                          label=""
                         />
                       )}
                     </td>
@@ -291,41 +337,40 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
             )}
           </TableBody>
         </Table>
-        <div className="mt-4 self-end">
-          {isDashboardCollections ? (
-            <Button
-              onClick={handleRemoveCollections}
-              disabled={checkedCollections.length === 0}
-              variant="primary"
-              title={checkedCollections.length === 0 ? "Select at least one collection to remove" : ""}
-            >
-              Remove Collection
-            </Button>
-          ) : (
-            <Button
-              onClick={handleAddToProject}
-              disabled={checkedCollections.length === 0 || !projectId}
-              variant="primary"
-              title={checkedCollections.length === 0 ? "Select at least one collection to add" : ""}
-            >
-              Add Selected to Project
-            </Button>
-          )}
-        </div>
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Books in "${modalTitle}"`}>
+          <div className="space-y-2 p-4">
+            {selectedBookList.length > 0 ? (
+              selectedBookList.map((book) => (
+                <div key={book._id} className="text-gray-800 dark:text-gray-100">
+                  {book.bookName || "Untitled"}
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500 dark:text-gray-400">No books found.</div>
+            )}
+          </div>
+        </Modal>
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          message={
+            isDashboardCollections
+              ? `Are you sure you want to delete ${checkedCollections.length} collection(s)? This action cannot be undone.`
+              : `Are you sure you want to add ${checkedCollections.length} collection(s) to the project?`
+          }
+          onConfirm={isDashboardCollections ? handleConfirmRemove : handleConfirmAdd}
+          onCancel={() => setShowConfirmDialog(false)}
+          confirmText={isDashboardCollections ? "OK" : "Add"}
+          isDestructive={isDashboardCollections}
+        />
+        <ConfirmDialogWithInput
+          isOpen={showInputDialog}
+          message={`To confirm deletion of ${checkedCollections.length} collection(s), please type "Delete" below:`}
+          onConfirm={handleConfirmInput}
+          onCancel={() => setShowInputDialog(false)}
+          confirmText="OK"
+          isDestructive={true}
+        />
       </div>
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Books in "${modalTitle}"`}>
-        <div className="space-y-2 p-4">
-          {selectedBookList.length > 0 ? (
-            selectedBookList.map((book) => (
-              <div key={book._id} className="text-gray-800 dark:text-gray-100">
-                {book.bookName || "Untitled"}
-              </div>
-            ))
-          ) : (
-            <div className="text-gray-500 dark:text-gray-400">No books found.</div>
-          )}
-        </div>
-      </Modal>
     </ComponentCard>
   );
 }

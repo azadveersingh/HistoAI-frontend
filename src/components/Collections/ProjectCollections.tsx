@@ -12,6 +12,7 @@ import {
 } from "../../components/ui/table";
 import { Modal } from "../../components/ui/modal/index";
 import Alert from "../../components/ui/alert/Alert";
+import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
 
 interface Collection {
   _id: string;
@@ -43,6 +44,7 @@ export default function ProjectCollections({ projectId, searchQuery }: ProjectCo
   const [showModal, setShowModal] = useState(false);
   const [selectedBookList, setSelectedBookList] = useState<Book[]>([]);
   const [modalTitle, setModalTitle] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   console.log("search query at project collections ", searchQuery);
 
@@ -95,19 +97,19 @@ export default function ProjectCollections({ projectId, searchQuery }: ProjectCo
       return;
     }
 
-    const confirm = window.confirm(
-      `Are you sure you want to remove ${removed.length} collection(s) from the project?`
-    );
+    setShowConfirmDialog(true);
+  };
 
-    if (!confirm) return;
+  const handleConfirmRemove = async () => {
+    const removed = initialCheckedCollections.filter(
+      (id) => !checkedCollections.includes(id)
+    );
 
     try {
       await removeCollectionsFromProject(projectId, removed);
-
       setCollections((prev) => prev.filter((col) => !removed.includes(col._id)));
       setInitialCheckedCollections((prev) => prev.filter((id) => !removed.includes(id)));
       setCheckedCollections((prev) => prev.filter((id) => !removed.includes(id)));
-
       setAlert({
         variant: "success",
         title: "Collections Removed",
@@ -120,6 +122,8 @@ export default function ProjectCollections({ projectId, searchQuery }: ProjectCo
         title: "Error",
         message: err.response?.data?.error || "An error occurred while removing collections.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -144,12 +148,10 @@ export default function ProjectCollections({ projectId, searchQuery }: ProjectCo
     }
   };
 
-  // Filter collections based on searchQuery
   const filteredCollections = collections.filter((collection) =>
     collection.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Check if there are any changes by comparing checkedCollections with initialCheckedCollections
   const hasChanges =
     checkedCollections.length !== initialCheckedCollections.length ||
     checkedCollections.some((id) => !initialCheckedCollections.includes(id)) ||
@@ -232,21 +234,32 @@ export default function ProjectCollections({ projectId, searchQuery }: ProjectCo
             Save Changes
           </button>
         </div>
-      </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Books in "${modalTitle}"`}>
-        <div className="space-y-2 p-4">
-          {selectedBookList.length > 0 ? (
-            selectedBookList.map((book) => (
-              <div key={book._id} className="text-gray-800 dark:text-gray-100">
-                {book.bookName || "Untitled"}
-              </div>
-            ))
-          ) : (
-            <div className="text-gray-500 dark:text-gray-400">No books found.</div>
-          )}
-        </div>
-      </Modal>
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Books in "${modalTitle}"`}>
+          <div className="space-y-2 p-4">
+            {selectedBookList.length > 0 ? (
+              selectedBookList.map((book) => (
+                <div key={book._id} className="text-gray-800 dark:text-gray-100">
+                  {book.bookName || "Untitled"}
+                </div>
+              ))
+            ) : (
+              <div className="text-gray-500 dark:text-gray-400">No books found.</div>
+            )}
+          </div>
+        </Modal>
+
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          message={`Are you sure you want to remove ${initialCheckedCollections.filter(
+            (id) => !checkedCollections.includes(id)
+          ).length} collection(s) from the project?`}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setShowConfirmDialog(false)}
+          confirmText="Remove"
+          isDestructive={true}
+        />
+      </div>
     </ComponentCard>
   );
 }

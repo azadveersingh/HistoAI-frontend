@@ -27,7 +27,7 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
   const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
   const [projectMemberIds, setProjectMemberIds] = useState<string[]>([]);
-
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -52,7 +52,6 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
 
     loadData();
   }, [projectId]);
-
 
   const handleCheckboxChange = (memberId: string, checked: boolean) => {
     setCheckedMembers((prev) =>
@@ -79,14 +78,19 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
       return;
     }
 
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmAdd = async () => {
     try {
-      await addMembersToProject(projectId, checkedMembers);
+      await addMembersToProject(projectId!, checkedMembers);
+      setProjectMemberIds((prev) => [...prev, ...checkedMembers]);
+      setCheckedMembers([]);
       setAlert({
         variant: "success",
         title: "Success",
         message: `${checkedMembers.length} member(s) added to the project.`,
       });
-      setCheckedMembers([]);
     } catch (err: any) {
       console.error("Error adding members:", err);
       setAlert({
@@ -94,6 +98,8 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
         title: "Error",
         message: err.response?.data?.error || "Failed to add members to project.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -124,7 +130,21 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
   if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
 
   return (
-    <ComponentCard title="All Members">
+    <ComponentCard
+      title={
+        <div className="flex justify-between items-center">
+          <span>All Members</span>
+          <Button
+            onClick={handleAddToProject}
+            disabled={checkedMembers.length === 0}
+            variant="primary"
+            className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
+          >
+            Add Selected to Project
+          </Button>
+        </div>
+      }
+    >
       <div className="flex flex-col gap-4">
         {alert && (
           <Alert
@@ -148,25 +168,24 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
             <tbody>
               {filteredMembers.map((member) => (
                 <tr key={member._id} className="border-t border-gray-200 dark:border-gray-700">
-                  
-                    <td className="p-3">
-                      {projectMemberIds.includes(member._id) ? (
-                        <div title="Already added to this project" className="cursor-not-allowed opacity-60">
-                          <Checkbox
-                            id={`member-${member._id}`}
-                            checked={true}
-                            disabled={true}
-                            onChange={() => { }}
-                          />
-                        </div>
-                      ) : (
+                  <td className="p-3">
+                    {projectMemberIds.includes(member._id) ? (
+                      <div title="Already added to this project" className="cursor-not-allowed opacity-60">
                         <Checkbox
                           id={`member-${member._id}`}
-                          checked={checkedMembers.includes(member._id)}
-                          onChange={(checked) => handleCheckboxChange(member._id, checked)}
+                          checked={true}
+                          disabled={true}
+                          onChange={() => {}}
                         />
-                      )}
-                    </td>
+                      </div>
+                    ) : (
+                      <Checkbox
+                        id={`member-${member._id}`}
+                        checked={checkedMembers.includes(member._id)}
+                        onChange={(checked) => handleCheckboxChange(member._id, checked)}
+                      />
+                    )}
+                  </td>
                   <td className="p-3">
                     <UserCircle className="w-6 h-6 text-gray-500" />
                   </td>
@@ -186,15 +205,14 @@ export default function AllMembers({ searchQuery = "" }: AllMembersProps) {
           </table>
         </div>
 
-        <div className="mt-4 flex justify-end">
-          <Button
-            onClick={handleAddToProject}
-            disabled={checkedMembers.length === 0}
-            variant="primary"
-          >
-            Add Selected to Project
-          </Button>
-        </div>
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          message={`Are you sure you want to add ${checkedMembers.length} member(s) to the project?`}
+          onConfirm={handleConfirmAdd}
+          onCancel={() => setShowConfirmDialog(false)}
+          confirmText="Add"
+          isDestructive={false}
+        />
       </div>
     </ComponentCard>
   );
