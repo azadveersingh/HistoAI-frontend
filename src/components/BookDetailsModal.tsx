@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Modal } from "../components/ui/modal/index";
 import Button from "../components/ui/button/Button";
 import { uploadBooks } from "../services/bookServices";
@@ -13,6 +14,7 @@ interface BookDetailsModalProps {
   setIsSubmitting: (isSubmitting: boolean) => void;
   isSubmitting: boolean;
   error: string;
+  setActiveTab?: (tab: "tab1" | "tab2") => void;
 }
 
 interface BookFormData {
@@ -33,10 +35,12 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   setIsSubmitting,
   isSubmitting,
   error,
+  setActiveTab,
 }) => {
   const [formData, setFormData] = useState<BookFormData>({});
   const [activeFile, setActiveFile] = useState<string | null>(null);
   const role = localStorage.getItem("role");
+  const navigate = useNavigate();
 
   useEffect(() => {
     setFormData((prev) => {
@@ -76,7 +80,6 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
     setError("");
     setSuccess(false);
 
-    // Debug: Log files array
     console.log("Files to upload:", files.map((f) => ({ name: f.name, size: f.size, type: f.type })));
 
     if (files.length === 0) {
@@ -97,16 +100,14 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
     }
 
     try {
-      // Process each file individually to match backend's current logic
       for (const file of files) {
         const uploadData = new FormData();
         const data = formData[file.name];
-        uploadData.append("files", file); // Use 'files' to match backend expectation
+        uploadData.append("files", file);
         uploadData.append("bookName", data.bookName.toUpperCase());
         uploadData.append("author", data.author.toUpperCase());
         uploadData.append("edition", data.edition.toUpperCase());
 
-        // Debug: Log FormData content for this file
         console.log(`FormData for ${file.name}:`);
         for (let [key, value] of uploadData.entries()) {
           console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
@@ -119,7 +120,13 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
       setFormData({});
       setFiles([]);
       onClose();
+      if (setActiveTab) {
+        console.log("Switching to processing tab (tab2)");
+        setActiveTab("tab2");
+      }
+      navigate("/books/manage", { state: { tab: "tab2" } }); // Pass tab in navigation state
     } catch (err: any) {
+      console.error("Upload error:", err);
       setError(err.response?.data?.error || "Failed to upload books. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -129,12 +136,9 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="w-full max-w-5xl">
       <div className="bg-white dark:bg-gray-900 p-6 rounded-lg shadow-lg w-full max-h-[90vh] flex flex-col">
-        {/* Header */}
         <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-100 text-center">
           Fill Book Details
         </h2>
-
-        {/* Scrollable content */}
         <div className="overflow-y-auto pr-2 space-y-5 flex-1">
           {files.map((file) => (
             <div
@@ -203,8 +207,6 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
             </div>
           ))}
         </div>
-
-        {/* Footer */}
         <div className="flex justify-end space-x-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             variant="primary"
@@ -222,7 +224,6 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
             Cancel
           </Button>
         </div>
-
         {error && (
           <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>
         )}

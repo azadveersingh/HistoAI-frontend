@@ -55,7 +55,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
       try {
         setLoading(true);
         const [allBooks, projectBooks] = await Promise.all([
-          fetchAllBooks(),
+          fetchAllBooks(), // Only returns books with completed OCR
           projectId && !isCentralRepository ? fetchProjectBooks(projectId) : Promise.resolve([]),
         ]);
 
@@ -272,7 +272,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
 
   const getVisibilityDialogMessage = () => {
     const projectCount = associatedProjects.length;
-    const collectionCount = 0; // Adjust if collections are implemented
+    const collectionCount = 0;
     if (projectCount === 0 && collectionCount === 0) {
       return (
         <span>Making this book private will make it not visible to anyone.</span>

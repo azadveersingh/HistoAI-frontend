@@ -2,43 +2,54 @@ import { useState, useEffect } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../components/ui/table";
 import ComponentCard from "../../components/common/ComponentCard";
 import Alert from "../../components/ui/alert/Alert";
+import Button from "../../components/ui/button/Button";
+import { fetchProcessingBooks, completeOcrProcess } from "../../services/bookServices";
 
-// Mock interface and data for demonstration
 interface ProcessingBook {
   _id: string;
   bookName: string;
-  progress: number; // Percentage (0-100)
-  status: "uploading" | "processing" | "failed";
+  progress: number;
+  ocrStatus: "pending" | "processing" | "failed";
 }
 
 export default function ProcessingBooks() {
   const [processingBooks, setProcessingBooks] = useState<ProcessingBook[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const role = localStorage.getItem("role");
 
-  // Mock data fetching (replace with actual API call)
   useEffect(() => {
-    // Simulate fetching processing books from an API
-    const fetchProcessingBooks = async () => {
+    const fetchProcessingBooksData = async () => {
       try {
         setLoading(true);
-        // Replace this with your actual API call to fetch processing books
-        const mockBooks: ProcessingBook[] = [
-          { _id: "1", bookName: "Book One", progress: 75, status: "uploading" },
-          { _id: "2", bookName: "Book Two", progress: 30, status: "processing" },
-          { _id: "3", bookName: "Book Three", progress: 0, status: "failed" },
-        ];
-        setProcessingBooks(mockBooks);
+        const books = await fetchProcessingBooks();
+        setProcessingBooks(books);
       } catch (err: any) {
-        setError("Failed to load processing books");
+        setError(err.response?.data?.error || "Failed to load processing books");
         console.error("Error fetching processing books:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProcessingBooks();
+    fetchProcessingBooksData();
   }, []);
+
+  const handleCompleteOcr = async (bookId: string) => {
+    if (role !== "book_manager") {
+      setError("Only book managers can mark OCR as complete.");
+      return;
+    }
+
+    try {
+      await completeOcrProcess(bookId);
+      setProcessingBooks((prev) => prev.filter((book) => book._id !== bookId));
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.error || "Failed to complete OCR process");
+      console.error("Error completing OCR process:", err);
+    }
+  };
 
   if (loading) return <div>Loading processing books...</div>;
   if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
@@ -65,6 +76,9 @@ export default function ProcessingBooks() {
                 <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Status
                 </TableCell>
+                <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Action
+                </TableCell>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -83,7 +97,19 @@ export default function ProcessingBooks() {
                     </div>
                     <span className="text-sm text-gray-600 dark:text-gray-300">{book.progress}%</span>
                   </TableCell>
-                  <TableCell className="p-4 capitalize">{book.status}</TableCell>
+                  <TableCell className="p-4 capitalize">{book.ocrStatus}</TableCell>
+                  <TableCell className="p-4">
+                    {book.ocrStatus === "pending" && (
+                      <Button
+                        variant="primary"
+                        onClick={() => handleCompleteOcr(book._id)}
+                        className="px-4 py-1 text-white bg-green-500 hover:bg-green-600"
+                        disabled={role !== "book_manager"}
+                      >
+                        Done
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

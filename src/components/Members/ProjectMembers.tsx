@@ -131,16 +131,17 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         <Table className="border-collapse">
           <TableHeader className="bg-gray-100 dark:bg-gray-800">
             <TableRow>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Select
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Member Name
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Email
               </TableCell>
-              <TableCell isHeader className="p-4 font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Role
               </TableCell>
             </TableRow>
