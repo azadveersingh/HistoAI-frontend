@@ -6,6 +6,7 @@ import Checkbox from "../../components/form/input/Checkbox";
 import Alert from "../../components/ui/alert/Alert";
 import { Modal } from "../../components/ui/modal/index";
 import { api as API_BASE } from "../../api/api";
+import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
 
 interface Book {
   _id: string;
@@ -32,6 +33,7 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
   const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   console.log("Search query in the project Book page:", searchQuery);
   console.log("Received projectId:", projectId);
@@ -83,12 +85,11 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
       return;
     }
 
-    const confirm = window.confirm(
-      `Are you sure you want to remove ${removed.length} book(s) from the project?`
-    );
+    setShowConfirmDialog(true);
+  };
 
-    if (!confirm) return;
-
+  const handleConfirmRemove = async () => {
+    const removed = initialCheckedBooks.filter((id) => !checkedBooks.includes(id));
     try {
       await removeBooksFromProject(projectId, removed);
       setBooks((prev) => prev.filter((book) => !removed.includes(book._id)));
@@ -106,6 +107,8 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
         title: "Error",
         message: err.response?.data?.error || "An error occurred while removing books.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -180,9 +183,6 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
               <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Created At
               </TableCell>
-              {/* <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Book Icon
-              </TableCell> */}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -227,24 +227,6 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
                     </button>
                   </TableCell>
                   <TableCell className="p-4">{formatDate(book.createdAt)}</TableCell>
-                  {/* <TableCell className="p-4">
-                    {book.frontPageImagePath ? (
-                      <img
-                        src={`${API_BASE}/Uploads/${book.frontPageImagePath}`}
-                        alt={book.bookName || "Book Icon"}
-                        className="w-12 h-12 object-cover rounded"
-                        onError={(e) => {
-                          e.currentTarget.src = "https://via.placeholder.com/48";
-                        }}
-                      />
-                    ) : (
-                      <img
-                        src="https://via.placeholder.com/48"
-                        alt="No Icon"
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    )}
-                  </TableCell> */}
                 </TableRow>
               ))
             )}
@@ -292,6 +274,15 @@ export default function ProjectBooks({ projectId, searchQuery }: ProjectBooksPro
             )}
           </div>
         </Modal>
+
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          message={`Are you sure you want to remove ${initialCheckedBooks.filter((id) => !checkedBooks.includes(id)).length} book(s) from the project?`}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setShowConfirmDialog(false)}
+          confirmText="Confirm"
+          isDestructive={true}
+        />
       </div>
     </ComponentCard>
   );

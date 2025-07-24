@@ -10,6 +10,7 @@ import {
 } from "../../components/ui/table";
 import Alert from "../../components/ui/alert/Alert";
 import { fetchProjectMembers, removeMembersFromProject } from "../../services/adminService";
+import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
 
 interface Member {
   _id: string;
@@ -32,6 +33,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   useEffect(() => {
     const loadProjectMembers = async () => {
@@ -80,12 +82,11 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
       return;
     }
 
-    const confirm = window.confirm(
-      `Are you sure you want to remove ${removed.length} member(s) from the project?`
-    );
+    setShowConfirmDialog(true);
+  };
 
-    if (!confirm) return;
-
+  const handleConfirmRemove = async () => {
+    const removed = initialCheckedMembers.filter((id) => !checkedMembers.includes(id));
     try {
       await removeMembersFromProject(projectId, removed);
       setMembers((prev) => prev.filter((member) => !removed.includes(member._id)));
@@ -103,6 +104,8 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
         title: "Error",
         message: err.response?.data?.error || "An error occurred while removing members.",
       });
+    } finally {
+      setShowConfirmDialog(false);
     }
   };
 
@@ -183,6 +186,17 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
             Save Changes
           </button>
         </div>
+
+        <ConfirmDialog
+          isOpen={showConfirmDialog}
+          message={`Are you sure you want to remove ${initialCheckedMembers.filter(
+            (id) => !checkedMembers.includes(id)
+          ).length} member(s) from the project?`}
+          onConfirm={handleConfirmRemove}
+          onCancel={() => setShowConfirmDialog(false)}
+          confirmText="Remove"
+          isDestructive={true}
+        />
       </div>
     </ComponentCard>
   );

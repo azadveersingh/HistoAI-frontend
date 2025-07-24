@@ -51,12 +51,22 @@ export const fetchAllBooks = async () => {
   }
 };
 
-// ------------------ 3. Delete Book ------------------
-export const deleteBook = async (bookId: string) => {
-  const response = await axios.delete(`${API_BASE}/api/books/${bookId}`, {
-    headers: getAuthHeaders(),
-  });
-  return response.data;
+// ------------------ 3. Delete Books ------------------
+export const deleteBooks = async (bookIds: string[]) => {
+  try {
+    console.log("deleteBooks: Sending request to delete books:", bookIds);
+    const response = await axios.post(`${API_BASE}/api/books/delete`, { bookIds }, {
+      headers: {
+        ...getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+    });
+    console.log("deleteBooks: Response received:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("deleteBooks: Error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 // ------------------ 4. Update Book Visibility ------------------
@@ -64,16 +74,23 @@ export const updateBookVisibility = async (
   bookId: string,
   visibility: "private" | "public"
 ) => {
-  const response = await axios.patch(
-    `${API_BASE}/api/books/${bookId}/visibility`,
-    { visibility },
-    {
-      headers: getAuthHeaders(),
-    }
-  );
-  return response.data;
+  try {
+    const response = await axios.patch(
+      `${API_BASE}/api/books/${bookId}/visibility`,
+      { visibility },
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    console.log("updateBookVisibility: Response received:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("updateBookVisibility: Error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
+// ------------------ 5. Add Books to Project ------------------
 export const addBooksToProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -81,6 +98,7 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
       { bookIds },
       { headers: getAuthHeaders() }
     );
+    console.log("addBooksToProject: Response received:", response.data);
     return response.data;
   } catch (error) {
     console.error("addBooksToProject error:", error);
@@ -88,6 +106,7 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
   }
 };
 
+// ------------------ 6. Remove Books from Project ------------------
 export const removeBooksFromProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -95,6 +114,7 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
       { bookIds },
       { headers: getAuthHeaders() }
     );
+    console.log("removeBooksFromProject: Response received:", response.data);
     return response.data;
   } catch (error) {
     console.error("removeBooksFromProject error:", error);
@@ -102,6 +122,7 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
   }
 };
 
+// ------------------ 7. Fetch Project Books ------------------
 export const fetchProjectBooks = async (projectId: string) => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/projects/${projectId}/books`, {
@@ -116,6 +137,25 @@ export const fetchProjectBooks = async (projectId: string) => {
     return books;
   } catch (error) {
     console.error("fetchProjectBooks error:", error);
+    throw error;
+  }
+};
+
+// ------------------ 8. Fetch Projects for Book ------------------
+export const fetchProjectsForBook = async (bookId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE}/api/books/${bookId}/projects`, {
+      headers: getAuthHeaders(),
+    });
+    console.log("fetchProjectsForBook response:", response.data);
+    const projects = response.data.projects || [];
+    if (!Array.isArray(projects)) {
+      console.error("fetchProjectsForBook: Expected an array, got:", response.data.projects);
+      return [];
+    }
+    return projects;
+  } catch (error) {
+    console.error("fetchProjectsForBook error:", error);
     throw error;
   }
 };
