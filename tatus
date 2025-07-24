@@ -1,0 +1,24 @@
+* [33m42e6f77[m[33m ([m[1;32mGaurav[m[33m)[m WIP: changes to BookUploadManager before merging main
+* [33me8dc003[m[33m ([m[1;31morigin/Gaurav[m[33m)[m modify the project page, all books and collections
+* [33mfffc09d[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m add env
+*   [33mc471ef8[m Merge pull request #3 from azadveersingh/Gaurav
+[32m|[m[33m\[m  
+[32m|[m *   [33m6edcea0[m Merge branch 'main' into Gaurav
+[32m|[m [34m|[m[32m\[m  
+[32m|[m [34m|[m[32m/[m  
+[32m|[m[32m/[m[34m|[m   
+* [34m|[m   [33mb189abd[m Merge pull request #2 from azadveersingh/prakhar
+[36m|[m[1;31m\[m [34m\[m  
+[36m|[m * [34m|[m [33m423b403[m chatbot stage managed
+[36m|[m[36m/[m [34m/[m  
+* [34m|[m   [33m20490c4[m Merge pull request #1 from azadveersingh/prakhar
+[1;32m|[m[1;33m\[m [34m\[m  
+[1;32m|[m * [34m|[m [33m139291a[m initial use tool
+[1;32m|[m[1;32m/[m [34m/[m  
+[1;32m|[m * [33m01f70fa[m Book delete email, confirmation input, visiblity alert
+[1;32m|[m[1;32m/[m  
+* [33m7875a49[m authprovider upload books and all
+* [33m5a5c772[m Project page update, add collection, create collection. add to project
+* [33ma29c707[m add bookUploading,Projects,collections page
+* [33m80227ab[m update
+* [33m55233a9[m initial commit
