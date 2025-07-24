@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import React, { useEffect, useState, useMemo } from "react";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { fetchAllBooks } from "../../services/bookServices";
 import { createCollection } from "../../services/collectionServices";
 import Input from "../form/input/InputField";
@@ -7,12 +7,17 @@ import Label from "../form/Label";
 import ComponentCard from "../common/ComponentCard";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import AllCollections from "./AllCollections";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../components/ui/table";
+import Alert from "../../components/ui/alert/Alert";
 
 interface Book {
   _id: string;
   bookName: string;
   author?: string;
+  edition?: string;
+  createdAt?: string;
+  pages?: number;
+  visibility?: "public" | "private";
 }
 
 const CollectionCreate: React.FC = () => {
@@ -20,50 +25,76 @@ const CollectionCreate: React.FC = () => {
   const location = useLocation();
   const { projectId: projectIdFromState } = location.state || {};
   const projectId = projectIdFromState || projectIdFromParams;
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [bookOptions, setBookOptions] = useState<Book[]>([]);
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [refreshCollections, setRefreshCollections] = useState(0);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [createAnother, setCreateAnother] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoading(true);
         const booksData = await fetchAllBooks();
-        setBookOptions(booksData);
-      } catch (err) {
-        setError("Failed to load books");
+        const validBooks = booksData.filter(
+          (book: Book) => book && book._id && typeof book._id === "string"
+        );
+        if (booksData.length !== validBooks.length) {
+          console.warn("Filtered out invalid books:", booksData.filter((book: Book) => !validBooks.includes(book)));
+        }
+        setBookOptions(validBooks);
+      } catch (err: any) {
+        setError(err.response?.data?.error || "Failed to load books");
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
-  const handleCheckboxChange = (
-    id: string,
-    selectedList: string[],
-    setList: React.Dispatch<React.SetStateAction<string[]>>
-  ) => {
-    setList((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+  useEffect(() => {
+    if (showSuccessAlert) {
+      const timer = setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 5000); // Hide success alert after 5 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [showSuccessAlert]);
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(""); // Clear error after 5 seconds
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  const handleCheckboxChange = (bookId: string, checked: boolean) => {
+    setSelectedBooks((prev) =>
+      checked ? [...prev, bookId] : prev.filter((id) => id !== bookId)
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-  
+
     if (!name.trim()) {
       setError("Collection name is required");
       return;
     }
-  
+
     if (selectedBooks.length === 0) {
       setError("Please select at least one book");
       return;
     }
-  
+
     try {
       setIsSubmitting(true);
       const payload = {
@@ -74,8 +105,13 @@ const CollectionCreate: React.FC = () => {
       await createCollection(payload);
       setName("");
       setSelectedBooks([]);
-      setRefreshCollections((prev) => prev + 1);
-      alert("Collection created successfully");
+      setSearchQuery("");
+      setShowSuccessAlert(true);
+      if (!createAnother) {
+        navigate("/dashboard/collections", {
+          state: { projectId },
+        });
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || "Failed to create collection");
     } finally {
@@ -83,52 +119,207 @@ const CollectionCreate: React.FC = () => {
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch {
+      return "Invalid Date";
+    }
+  };
+
+  const sortedBooks = useMemo(() => {
+    return [...bookOptions].sort((a, b) => {
+      const aChecked = selectedBooks.includes(a._id);
+      const bChecked = selectedBooks.includes(b._id);
+      if (aChecked && !bChecked) return -1;
+      if (!aChecked && bChecked) return 1;
+      const aBookName = a.bookName || "Untitled";
+      const bBookName = b.bookName || "Untitled";
+      return aBookName.localeCompare(bBookName);
+    });
+  }, [bookOptions, selectedBooks]);
+
+  const filteredBooks = useMemo(
+    () =>
+      sortedBooks.filter((book) =>
+        [
+          book.bookName || "",
+          book.author || "",
+          book.edition || "",
+          formatDate(book.createdAt),
+          book.pages?.toString() || "",
+          book.visibility || "",
+        ].some((field) => field.toLowerCase().includes(searchQuery.toLowerCase()))
+      ),
+    [sortedBooks, searchQuery]
+  );
+
+  const isCreateButtonDisabled = !name.trim() || selectedBooks.length === 0 || isSubmitting;
+
+  const [loading, setLoading] = useState(true); // Moved to avoid reference error
+
+  if (loading) return (
+    <div className="text-gray-600 dark:text-gray-400 text-center p-4">
+      Loading books...
+    </div>
+  );
   if (error && !bookOptions.length) {
-    return <div className="text-red-600">{error}</div>;
+    return (
+      <Alert
+        variant="error"
+        title="Error"
+        message={error}
+      />
+    );
   }
 
   return (
-    <ComponentCard title="Create Collection">
-      <div className="flex flex-col gap-6">
+    <ComponentCard title="Create New Collection">
+      <div className="flex flex-col gap-6 p-4 sm:p-6">
+        {(showSuccessAlert || error) && (
+          <Alert
+            variant={showSuccessAlert ? "success" : "error"}
+            title={showSuccessAlert ? "Collection Created" : "Error"}
+            message={
+              showSuccessAlert ? "Your collection has been created successfully." : error
+            }
+          />
+        )}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <Label>Collection Name</Label>
-            <Input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter collection name"
-            />
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div className="w-full sm:max-w-md space-y-4">
+              <div>
+                <Label htmlFor="collection-name" className="text-gray-700 dark:text-gray-200">
+                  Collection Name
+                </Label>
+                <Input
+                  id="collection-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter collection name"
+                  className="w-full text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-brand-500 dark:focus:ring-brand-400"
+                />
+              </div>
+              <Checkbox
+                id="create-another"
+                checked={createAnother}
+                onChange={(checked) => setCreateAnother(checked)}
+                label="Create another collection after this one"
+                className="text-gray-900 dark:text-gray-100"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={isCreateButtonDisabled}
+              variant="primary"
+              className="w-full sm:w-40 h-11 rounded-lg bg-brand-500 text-white font-medium text-sm transition-colors hover:bg-brand-600 dark:hover:bg-brand-400 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "Creating..." : "Create Collection"}
+            </Button>
           </div>
 
-          <div>
-            <Label>Select Books</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {bookOptions.map((book) => (
-                <Checkbox
-                  key={book._id}
-                  label={`${book.bookName} (${book.author || "Unknown"})`}
-                  checked={selectedBooks.includes(book._id)}
-                  onChange={() =>
-                    handleCheckboxChange(book._id, selectedBooks, setSelectedBooks)
-                  }
+          <div className="bg-gray-50 dark:bg-gray-800 p-4 sm:p-6 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Select Books
+              </h3>
+              <div className="w-full sm:w-64">
+                <Label htmlFor="search-books" className="text-gray-700 dark:text-gray-200">
+                  Search Books
+                </Label>
+                <Input
+                  id="search-books"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search books..."
+                  className="w-full text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-brand-500 dark:focus:ring-brand-400"
                 />
-              ))}
+              </div>
+            </div>
+
+            <div className="relative overflow-x-auto max-h-[400px] scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-gray-100 dark:scrollbar-track-gray-800">
+              <Table className="border-collapse w-full min-w-[600px]">
+                <TableHeader className="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10">
+                  <TableRow>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 w-16">
+                      Select
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[150px]">
+                      Book Name
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[120px]">
+                      Author
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[80px]">
+                      Edition
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[100px]">
+                      Created At
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[80px]">
+                      Pages
+                    </TableCell>
+                    <TableCell isHeader className="p-3 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200 min-w-[80px]">
+                      Visibility
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredBooks.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="p-3 sm:p-4 text-center text-gray-500 dark:text-gray-400">
+                        No books found matching your search
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredBooks.map((book) => (
+                      <TableRow
+                        key={book._id}
+                        className="border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                      >
+                        <TableCell className="p-3 sm:p-4">
+                          <Checkbox
+                            id={`book-${book._id}`}
+                            checked={selectedBooks.includes(book._id)}
+                            onChange={(checked) => handleCheckboxChange(book._id, checked)}
+                            label=""
+                            className="text-gray-900 dark:text-gray-100"
+                          />
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100 truncate max-w-[150px]">
+                          {book.bookName || "Untitled"}
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100 truncate max-w-[120px]">
+                          {book.author || "Unknown Author"}
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100">
+                          {book.edition || "N/A"}
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100">
+                          {formatDate(book.createdAt)}
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100">
+                          {book.pages || "N/A"}
+                        </TableCell>
+                        <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100 capitalize">
+                          {book.visibility || "Private"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </div>
           </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-30 h-11 rounded-lg bg-brand-500 text-white font-medium text-sm transition-colors hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? "Creating..." : "Create Collection"}
-          </button>
         </form>
-
-        <AllCollections key={refreshCollections} hideCreateButton={true} />
       </div>
     </ComponentCard>
   );

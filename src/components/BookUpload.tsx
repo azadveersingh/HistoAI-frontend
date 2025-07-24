@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import DropzoneComponent from "../components/form/form-elements/DropZone";
 import Button from "../components/ui/button/Button";
 import BookDetailsModal from "./BookDetailsModal";
@@ -10,6 +11,8 @@ const BookUpload: React.FC = () => {
   const [success, setSuccess] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const location = useLocation();
+  const setActiveTab = location.state?.setActiveTab; // Get setActiveTab from navigation state
 
   const handleDrop = useCallback((acceptedFiles: File[]) => {
     let totalSize = 0;
@@ -113,6 +116,7 @@ const BookUpload: React.FC = () => {
           setIsSubmitting={setIsSubmitting}
           isSubmitting={isSubmitting}
           error={error}
+          setActiveTab={setActiveTab} // Pass setActiveTab to BookDetailsModal
         />
       </div>
     </div>

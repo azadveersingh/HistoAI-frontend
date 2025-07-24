@@ -34,7 +34,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
     },
     {
       icon: <FileIcon />,
-      name: 'Add Books',
+      name: 'Add Books to Project',
       path: `/project/${projectId}/books/add`,
     },
     {
