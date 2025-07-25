@@ -4,6 +4,8 @@ import Checkbox from "../../components/form/input/Checkbox";
 import Button from "../../components/ui/button/Button";
 import { fetchAllBooks } from "../../services/bookServices";
 import { fetchVisibleCollections } from "../../services/collectionServices";
+// Import icons from react-icons
+import { FiDatabase, FiMessageSquare, FiGitBranch } from "react-icons/fi";
 
 interface Book {
   _id: string;
@@ -60,24 +62,23 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
   };
 
   const handleProceed = (tool: 'data-extraction' | 'chatbot' | 'knowledge-graph') => {
-    // Construct URL with query parameters
     const url = `/project/${projectId}/tools/welcome?collections=${encodeURIComponent(
       selectedCollections.join(",")
     )}&books=${encodeURIComponent(selectedBooks.join(","))}&tool=${encodeURIComponent(tool)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  if (loading) return <div>Loading collections and books...</div>;
-  if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
+  if (loading) return <div className="text-center text-gray-600 dark:text-gray-400">Loading collections and books...</div>;
+  if (error) return <div className="text-center text-red-600 dark:text-red-400">{error}</div>;
 
   return (
     <ComponentCard title="Project Tools" className="p-6">
-      <h2 className="text-xl font-semibold mb-4">Select Project Items</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Select Project Items</h2>
 
       <div className="flex flex-col md:flex-row gap-6 mb-6">
         {/* Collections List */}
         <div className="flex-1">
-          <h3 className="text-lg font-medium mb-2">Collections</h3>
+          <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">Collections</h3>
           {collections.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No collections available</p>
           ) : (
@@ -97,7 +98,7 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
 
         {/* Books List */}
         <div className="flex-1">
-          <h3 className="text-lg font-medium mb-2">Books</h3>
+          <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">Books</h3>
           {books.length === 0 ? (
             <p className="text-gray-500 dark:text-gray-400">No books available</p>
           ) : (
@@ -116,27 +117,33 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
         </div>
       </div>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-3 mt-6">
         <Button
           onClick={() => handleProceed('data-extraction')}
           disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
           variant="primary"
+          className="flex items-center gap-2 transition-all duration-200 hover:shadow-md px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400"
         >
-          Data Extraction
+          <FiDatabase className="text-lg" />
+          <span>Data Extraction</span>
         </Button>
         <Button
           onClick={() => handleProceed('chatbot')}
           disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
           variant="primary"
+          className="flex items-center gap-2 transition-all duration-200 hover:shadow-md px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400"
         >
-          Chatbot
+          <FiMessageSquare className="text-lg" />
+          <span>Chatbot</span>
         </Button>
         <Button
           onClick={() => handleProceed('knowledge-graph')}
           disabled={selectedBooks.length === 0 && selectedCollections.length === 0}
           variant="primary"
+          className="flex items-center gap-2 transition-all duration-200 hover:shadow-md px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white disabled:bg-gray-300 disabled:text-gray-500 dark:disabled:bg-gray-600 dark:disabled:text-gray-400"
         >
-          Knowledge Graph
+          <FiGitBranch className="text-lg" />
+          <span>Knowledge Graph</span>
         </Button>
       </div>
     </ComponentCard>

@@ -17,7 +17,7 @@ const ProjectPage: React.FC = () => {
   const { isExpanded, isMobileOpen, toggleSidebar: localToggleSidebar, toggleMobileSidebar: localToggleMobileSidebar } = useSidebar();
   const { id: projectId } = useParams<{ id: string }>();
   const { toggleSidebar, toggleMobileSidebar } = useOutletContext<ContextType>() || {};
-  const [selectedOption, setSelectedOption] = useState<string>('Add Collections');
+  const [selectedOption, setSelectedOption] = useState<string>('Use Tools');
   const [searchQuery, setSearchQuery] = useState<string>(''); // Track input live
   const [projectName, setProjectName] = useState<string>(''); // Store project name
   const [isEditing, setIsEditing] = useState(false); // Track edit mode
@@ -94,7 +94,7 @@ const ProjectPage: React.FC = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex flex-col p-4 bg-white dark:bg-gray-800 shadow">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <button
+            {/* <button
               onClick={handleToggleMainSidebar}
               className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 rounded sm:self-start"
               aria-label="Close sidebar"
@@ -102,7 +102,7 @@ const ProjectPage: React.FC = () => {
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
-            </button>
+            </button> */}
             <div className="flex items-center justify-center sm:flex-1">
               {isEditing ? (
                 <input
