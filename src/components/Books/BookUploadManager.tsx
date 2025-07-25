@@ -1,5 +1,5 @@
-import { FC, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { FC, useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import AllBooks from "../Books/AllBooks";
 import ProcessingBooks from "../Books/ProcessingBooks";
 import Button from "../../components/ui/button/Button";
@@ -17,12 +17,21 @@ interface TabConfig {
 }
 
 const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => {
-  const [activeTab, setActiveTab] = useState<"tab1" | "tab2">("tab1");
+  const location = useLocation();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"tab1" | "tab2">(
+    (location.state?.tab as "tab1" | "tab2") || "tab1"
+  );
+
+  useEffect(() => {
+    if (location.state?.tab && location.state.tab !== activeTab) {
+      setActiveTab(location.state.tab as "tab1" | "tab2");
+    }
+  }, [location.state]);
 
   const tabConfig: TabConfig = {
     tab1: "Central Repository",
-    tab2: "Book Uplaod and Processing",
+    tab2: "Book Upload and Processing",
     component1: <AllBooks searchQuery={searchQuery} isCentralRepository={true} />,
     component2: <ProcessingBooks />,
   };
@@ -36,7 +45,7 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
             <button
               onClick={() => setActiveTab("tab1")}
               className={`px-4 py-2 font-medium transition-all ${
-                activeTab === "tab1" // Fixed: Changed activeAggregateTab to activeTab
+                activeTab === "tab1"
                   ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
                   : "text-gray-600 dark:text-gray-300 hover:text-blue-600"
               }`}
@@ -63,7 +72,7 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
               <div className="flex justify-end mb-4">
                 <Button
                   variant="primary"
-                  onClick={() => navigate("/books/upload")}
+                  onClick={() => navigate("/books/upload", { state: { fromTab: "tab2" } })}
                   className="px-6 py-2 text-white font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md"
                 >
                   Upload Book

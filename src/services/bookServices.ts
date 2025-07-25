@@ -11,7 +11,6 @@ const getAuthHeaders = () => {
 
 // ------------------ 1. Upload Books ------------------
 export const uploadBooks = async (formData: FormData) => {
-  // Debug: Log FormData content before sending
   console.log("uploadBooks: Sending FormData with entries:");
   for (let [key, value] of formData.entries()) {
     console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
@@ -38,7 +37,6 @@ export const fetchAllBooks = async () => {
     const response = await axios.get(`${API_BASE}/api/books/`, {
       headers: getAuthHeaders(),
     });
-    console.log("fetchAllBooks response:", response.data); // Debug log
     const books = response.data.books || [];
     if (!Array.isArray(books)) {
       console.error("fetchAllBooks: Expected an array, got:", response.data.books);
@@ -47,11 +45,31 @@ export const fetchAllBooks = async () => {
     return books;
   } catch (error) {
     console.error("fetchAllBooks error:", error);
-    throw error; // Re-throw to be handled by the caller
+
+    throw error;
   }
 };
 
-// ------------------ 3. Delete Books ------------------
+// ------------------ 3. Get Processing Books ------------------
+export const fetchProcessingBooks = async () => {
+  try {
+    const response = await axios.get(`${API_BASE}/api/books/processing`, {
+      headers: getAuthHeaders(),
+    });
+    console.log("fetchProcessingBooks response:", response.data);
+    const books = response.data.books || [];
+    if (!Array.isArray(books)) {
+      console.error("fetchProcessingBooks: Expected an array, got:", response.data.books);
+      return [];
+    }
+    return books;
+  } catch (error) {
+    console.error("fetchProcessingBooks error:", error);
+    throw error;
+  }
+};
+
+// ------------------ 4. Delete Books ------------------
 export const deleteBooks = async (bookIds: string[]) => {
   try {
     console.log("deleteBooks: Sending request to delete books:", bookIds);
@@ -69,7 +87,8 @@ export const deleteBooks = async (bookIds: string[]) => {
   }
 };
 
-// ------------------ 4. Update Book Visibility ------------------
+// ------------------ 5. Update Book Visibility ------------------
+
 export const updateBookVisibility = async (
   bookId: string,
   visibility: "private" | "public"
@@ -90,7 +109,26 @@ export const updateBookVisibility = async (
   }
 };
 
-// ------------------ 5. Add Books to Project ------------------
+// ------------------ 6. Complete OCR Process ------------------
+export const completeOcrProcess = async (bookId: string) => {
+  try {
+    const response = await axios.post(
+      `${API_BASE}/api/books/${bookId}/ocr/complete`,
+      {},
+      {
+        headers: getAuthHeaders(),
+      }
+    );
+    console.log("completeOcrProcess: Response received:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("completeOcrProcess: Error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// ------------------ 7. Add Books to Project ------------------
+
 export const addBooksToProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -106,7 +144,8 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
   }
 };
 
-// ------------------ 6. Remove Books from Project ------------------
+
+// ------------------ 8. Remove Books from Project ------------------
 export const removeBooksFromProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -122,7 +161,9 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
   }
 };
 
-// ------------------ 7. Fetch Project Books ------------------
+
+// ------------------ 9. Fetch Project Books ------------------
+
 export const fetchProjectBooks = async (projectId: string) => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/projects/${projectId}/books`, {
@@ -141,7 +182,9 @@ export const fetchProjectBooks = async (projectId: string) => {
   }
 };
 
-// ------------------ 8. Fetch Projects for Book ------------------
+
+// ------------------ 10. Fetch Projects for Book ------------------
+
 export const fetchProjectsForBook = async (bookId: string) => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/${bookId}/projects`, {

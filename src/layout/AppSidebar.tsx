@@ -68,8 +68,8 @@ const navItems: NavItem[] = [
     ? [
       {
         icon: <PageIcon />,
-        name: "View Collections",
-        path: "/dashboard/collections", // Updated to navigate to AllCollections page
+        name: "View & Create Collections",
+        path: "/dashboard/collections", 
       },
     ]
     : []),
