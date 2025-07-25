@@ -15,11 +15,11 @@ const LayoutContent: React.FC = () => {
       </div>
       <div
         className={`flex-1 transition-all duration-300 ease-in-out ${
-          isExpanded ? "lg:ml-[250px]" : "lg:ml-[80px]"
+          isExpanded ? "lg:ml-[220px]" : "lg:ml-[60px]"
         } ${isMobileOpen ? "ml-0" : ""}`}
       >
         <AppHeader />
-        <div className="p-4 mx-auto max-w-[1440px] md:p-6">
+        <div className="p-2 mx-auto max-w-[1750px] md:p-4">
           <Outlet />
         </div>
       </div>
