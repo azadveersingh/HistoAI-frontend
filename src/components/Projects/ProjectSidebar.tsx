@@ -165,11 +165,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
             className="mb-4 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={toggleSidebar}
           >
-            {isExpanded ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
+            <Menu className="w-5 h-5" /> {/* Fixed to Menu icon */}
           </button>
 
           <nav className="flex-1">
