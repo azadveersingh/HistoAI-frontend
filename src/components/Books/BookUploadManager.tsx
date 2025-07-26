@@ -96,13 +96,13 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
               <div className="flex justify-end mb-4">
                 <Button
                   variant="primary"
-<<<<<<< Updated upstream
+
                   onClick={() => navigate("/books/upload", { state: { setActiveTab } })}
                   className="px-6 py-2 text-white font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md"
-=======
+
                   onClick={() => navigate("/books/upload", { state: { fromTab: "tab2" } })}
                   className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-200"
->>>>>>> Stashed changes
+
                 >
                   Upload Book
                 </Button>
