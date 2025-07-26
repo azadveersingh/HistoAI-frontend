@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "../components/ui/modal/index";
 import Button from "../components/ui/button/Button";
 import { uploadBooks } from "../services/bookServices";
+import { PlusIcon } from "@heroicons/react/24/outline";
 
 interface BookDetailsModalProps {
   isOpen: boolean;
@@ -21,7 +22,9 @@ interface BookFormData {
   [key: string]: {
     bookName: string;
     author: string;
+    author2: string;
     edition: string;
+    errors?: { bookName?: string; author?: string };
   };
 }
 
@@ -39,6 +42,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<BookFormData>({});
   const [activeFile, setActiveFile] = useState<string | null>(null);
+  const [showAuthor2, setShowAuthor2] = useState<{ [key: string]: boolean }>({});
   const role = localStorage.getItem("role");
   const navigate = useNavigate();
 
@@ -47,26 +51,75 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
       const newFormData: BookFormData = { ...prev };
       files.forEach((file) => {
         if (!newFormData[file.name]) {
-          newFormData[file.name] = { bookName: "", author: "", edition: "" };
+          newFormData[file.name] = { bookName: "", author: "", author2: "", edition: "", errors: {} };
         }
       });
       return newFormData;
+    });
+    setShowAuthor2((prev) => {
+      const newShowAuthor2 = { ...prev };
+      files.forEach((file) => {
+        if (!(file.name in newShowAuthor2)) {
+          newShowAuthor2[file.name] = false;
+        }
+      });
+      return newShowAuthor2;
     });
   }, [files]);
 
   useEffect(() => {
     if (!isOpen) {
       setFormData({});
+      setShowAuthor2({});
       setError("");
     }
   }, [isOpen, setError]);
 
   const handleInputChange = (fileName: string, field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [fileName]: { ...prev[fileName], [field]: value },
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [fileName]: {
+          ...prev[fileName],
+          [field]: value,
+          errors: { ...prev[fileName].errors, [field]: "" },
+        },
+      };
+      return updated;
+    });
     setError("");
+  };
+
+  const toggleAuthor2 = (fileName: string) => {
+    setShowAuthor2((prev) => ({
+      ...prev,
+      [fileName]: !prev[fileName],
+    }));
+    if (showAuthor2[fileName]) {
+      handleInputChange(fileName, "author2", "");
+    }
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newFormData = { ...formData };
+
+    files.forEach((file) => {
+      const data = newFormData[file.name];
+      data.errors = {};
+
+      if (!data.bookName.trim()) {
+        data.errors.bookName = "Book name is required";
+        isValid = false;
+      }
+      if (!data.author.trim()) {
+        data.errors.author = "Primary author is required";
+        isValid = false;
+      }
+    });
+
+    setFormData(newFormData);
+    return isValid;
   };
 
   const handleSubmit = async () => {
@@ -78,9 +131,6 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
 
     setIsSubmitting(true);
     setError("");
-    setSuccess(false);
-
-    console.log("Files to upload:", files.map((f) => ({ name: f.name, size: f.size, type: f.type })));
 
     if (files.length === 0) {
       setError("No files selected for upload.");
@@ -88,13 +138,8 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
       return;
     }
 
-    const hasEmptyFields = files.some((file) => {
-      const data = formData[file.name];
-      return !data.bookName || !data.author;
-    });
-
-    if (hasEmptyFields) {
-      setError("Please fill in all fields marked with * for each book.");
+    if (!validateForm()) {
+      setError("Please fill in all required fields for each book.");
       setIsSubmitting(false);
       return;
     }
@@ -106,6 +151,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
         uploadData.append("files", file);
         uploadData.append("bookName", data.bookName.toUpperCase());
         uploadData.append("author", data.author.toUpperCase());
+        uploadData.append("author2", data.author2.toUpperCase());
         uploadData.append("edition", data.edition.toUpperCase());
 
         console.log(`FormData for ${file.name}:`);
@@ -118,13 +164,14 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
 
       setSuccess(true);
       setFormData({});
+      setShowAuthor2({});
       setFiles([]);
       onClose();
       if (setActiveTab) {
         console.log("Switching to processing tab (tab2)");
         setActiveTab("tab2");
       }
-      navigate("/books/manage", { state: { tab: "tab2" } }); // Pass tab in navigation state
+      navigate("/books/manage", { state: { tab: "tab2" } });
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.response?.data?.error || "Failed to upload books. Please try again.");
@@ -143,7 +190,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
           {files.map((file) => (
             <div
               key={file.name}
-              className={`space-y-4 p-4 mb-4 rounded-lg
+              className={`space-y-4 p-4 mb-4 rounded-lg transition-all duration-300
                 ${activeFile === file.name
                   ? "border-2 border-blue-500 dark:ring-blue-500"
                   : "border border-gray-200 dark:border-gray-700"}
@@ -155,7 +202,10 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
                   ({(file.size / (1024 * 1024)).toFixed(2)} MB)
                 </span>
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div
+                className={`grid grid-cols-1 gap-4
+                  ${showAuthor2[file.name] ? "md:grid-cols-4" : "md:grid-cols-3"}`}
+              >
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Book Name<span className="text-red-500">*</span>
@@ -167,27 +217,68 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
                     onChange={(e) =>
                       handleInputChange(file.name, "bookName", e.target.value.toUpperCase())
                     }
-                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                    className={`w-full p-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase
+                      ${formData[file.name]?.errors?.bookName ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                     placeholder="Book Name (Unique)"
                     aria-required="true"
                   />
+                  {formData[file.name]?.errors?.bookName && (
+                    <p className="mt-1 text-xs text-red-500">{formData[file.name].errors.bookName}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
-                    Author Name<span className="text-red-500">*</span>
+                    Primary Author<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    value={formData[file.name]?.author || ""}
-                    onFocus={() => setActiveFile(file.name)}
-                    onChange={(e) =>
-                      handleInputChange(file.name, "author", e.target.value.toUpperCase())
-                    }
-                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
-                    placeholder="Author Name"
-                    aria-required="true"
-                  />
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={formData[file.name]?.author || ""}
+                      onFocus={() => setActiveFile(file.name)}
+                      onChange={(e) =>
+                        handleInputChange(file.name, "author", e.target.value.toUpperCase())
+                      }
+                      className={`w-full p-2 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase
+                        ${formData[file.name]?.errors?.author ? "border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                      placeholder="Primary Author"
+                      aria-required="true"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => toggleAuthor2(file.name)}
+                      className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      aria-label={showAuthor2[file.name] ? "Remove co-author field" : "Add co-author field"}
+                      aria-expanded={showAuthor2[file.name]}
+                    >
+                      <PlusIcon
+                        className={`h-5 w-5 transform ${showAuthor2[file.name] ? "rotate-45" : ""}`}
+                      />
+                      <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
+                        (Author)
+                      </span>
+                    </button>
+                  </div>
+                  {formData[file.name]?.errors?.author && (
+                    <p className="mt-1 text-xs text-red-500">{formData[file.name].errors.author}</p>
+                  )}
                 </div>
+                {showAuthor2[file.name] && (
+                  <div className="animate-fade-in">
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+                      Co-Author <span className="text-gray-400 text-xs">(Optional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData[file.name]?.author2 || ""}
+                      onFocus={() => setActiveFile(file.name)}
+                      onChange={(e) =>
+                        handleInputChange(file.name, "author2", e.target.value.toUpperCase())
+                      }
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase bg-gray-50 dark:bg-gray-800"
+                      placeholder="Co-Author (Optional)"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Edition <span className="text-gray-400 text-xs">(Optional)</span>

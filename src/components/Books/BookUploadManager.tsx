@@ -1,3 +1,4 @@
+
 import { FC, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AllBooks from "../Books/AllBooks";
@@ -38,35 +39,56 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
     component2: <ProcessingBooks />,
   };
 
+  const handleTabChange = (tab: "tab1" | "tab2") => {
+    setActiveTab(tab);
+    // Update URL state to persist tab selection
+    navigate(location.pathname, { state: { tab } });
+  };
+
   return (
-    <div className="min-h-screen p-6 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <PageBreadcrumb pageTitle="Book Management" />
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between border-b border-gray-300 dark:border-gray-700 mb-4">
-          <div className="flex space-x-4">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 mb-6"
+          role="tablist"
+          aria-label="Book Management Tabs"
+        >
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
             <button
-              onClick={() => setActiveTab("tab1")}
-              className={`px-4 py-2 font-medium transition-all ${
+              role="tab"
+              aria-selected={activeTab === "tab1"}
+              aria-controls="tab1-panel"
+              onClick={() => handleTabChange("tab1")}
+              className={`px-4 py-2 text-sm sm:text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
                 activeTab === "tab1"
-                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600"
+                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-b-2 hover:border-blue-300 dark:hover:border-blue-600"
               }`}
             >
               {tabConfig.tab1}
             </button>
             <button
-              onClick={() => setActiveTab("tab2")}
-              className={`px-4 py-2 font-medium transition-all ${
+              role="tab"
+              aria-selected={activeTab === "tab2"}
+              aria-controls="tab2-panel"
+              onClick={() => handleTabChange("tab2")}
+              className={`px-4 py-2 text-sm sm:text-base font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 ${
                 activeTab === "tab2"
-                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400"
-                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600"
+                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 dark:border-blue-400"
+                  : "text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-b-2 hover:border-blue-300 dark:hover:border-blue-600"
               }`}
             >
               {tabConfig.tab2}
             </button>
           </div>
         </div>
-        <div className="p-4 bg-white dark:bg-gray-900 rounded-lg shadow-md min-h-[calc(100vh-220px)]">
+        <div
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 min-h-[calc(100vh-180px)] sm:min-h-[calc(100vh-220px)]"
+          role="tabpanel"
+          id={activeTab === "tab1" ? "tab1-panel" : "tab2-panel"}
+          aria-labelledby={activeTab === "tab1" ? "tab1" : "tab2"}
+        >
           {activeTab === "tab1" ? (
             tabConfig.component1
           ) : (
@@ -74,8 +96,13 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
               <div className="flex justify-end mb-4">
                 <Button
                   variant="primary"
+<<<<<<< Updated upstream
                   onClick={() => navigate("/books/upload", { state: { setActiveTab } })}
                   className="px-6 py-2 text-white font-medium bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md"
+=======
+                  onClick={() => navigate("/books/upload", { state: { fromTab: "tab2" } })}
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-200"
+>>>>>>> Stashed changes
                 >
                   Upload Book
                 </Button>

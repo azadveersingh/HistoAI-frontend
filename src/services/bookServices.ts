@@ -43,7 +43,10 @@ export const fetchAllBooks = async () => {
       console.error("fetchAllBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books;
+    return books.map((book: any) => ({
+      ...book,
+      author2: book.author2 || "", // Default to empty string if not present
+    }));
   } catch (error) {
     console.error("fetchAllBooks error:", error);
     throw error;
@@ -62,7 +65,10 @@ export const fetchProcessingBooks = async () => {
       console.error("fetchProcessingBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books;
+    return books.map((book: any) => ({
+      ...book,
+      author2: book.author2 || "", // Default to empty string if not present
+    }));
   } catch (error) {
     console.error("fetchProcessingBooks error:", error);
     throw error;
@@ -170,7 +176,10 @@ export const fetchProjectBooks = async (projectId: string) => {
       console.error("fetchProjectBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books;
+    return books.map((book: any) => ({
+      ...book,
+      author2: book.author2 || "", // Default to empty string if not present
+    }));
   } catch (error) {
     console.error("fetchProjectBooks error:", error);
     throw error;
@@ -192,6 +201,37 @@ export const fetchProjectsForBook = async (bookId: string) => {
     return projects;
   } catch (error) {
     console.error("fetchProjectsForBook error:", error);
+    throw error;
+  }
+};
+
+
+// ------------------ 2. Update Book Details ------------------
+export const updateBookDetails = async (
+  bookId: string,
+  bookData: {
+    bookName?: string;
+    author: string; // Mandatory
+    author2?: string; // Optional
+    edition?: string;
+  }
+) => {
+  try {
+    console.log("updateBookDetails: Sending request to update book:", bookId, bookData);
+    const response = await axios.patch(
+      `${API_BASE}/api/books/${bookId}/update`,
+      bookData,
+      {
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("updateBookDetails: Response received:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("updateBookDetails: Error:", error.response?.data || error.message);
     throw error;
   }
 };

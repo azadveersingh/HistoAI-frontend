@@ -19,13 +19,28 @@ export const fetchVisibleCollections = async () => {
 };
 
 // ---------- 2. GET: Single collection by ID ----------
-export const fetchCollectionById = async (collectionId: string) => {
-  const response = await axios.get(`${API_BASE}/api/collections/${collectionId}`, {
-    headers: getAuthHeaders(),
-  });
-  return response.data;
-};
+// export const fetchCollectionById = async (collectionId: string) => {
+//   const response = await axios.get(`${API_BASE}/api/collections/${collectionId}`, {
+//     headers: getAuthHeaders(),
+//   });
+//   return response.data;
+// };
 
+export const fetchCollectionById = async (collectionId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE}/api/collections/${collectionId}`, {
+      headers: getAuthHeaders(),
+    });
+    const collection = response.data.collection || response.data;
+    console.log("Fetched collection by ID:", collection);
+    collection.bookIds = Array.isArray(collection.bookIds) ? collection.bookIds : [];
+    collection.projectIds = Array.isArray(collection.projectIds) ? collection.projectIds : [];
+    return collection;
+  } catch (error) {
+    console.error("fetchCollectionById error:", error);
+    throw error;
+  }
+};
 // ---------- 3. POST: Create a new collection ----------
 export const createCollection = async (data: {
   name: string;

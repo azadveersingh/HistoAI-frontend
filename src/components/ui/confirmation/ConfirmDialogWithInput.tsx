@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Modal } from "../modal/index";
 import Button from "../button/Button";
@@ -20,6 +21,7 @@ export default function ConfirmDialogWithInput({
   isDestructive = false,
 }: ConfirmDialogWithInputProps) {
   const [inputValue, setInputValue] = useState("");
+  const isInputValid = inputValue === "Delete"; // Case-sensitive check
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,15 +33,17 @@ export default function ConfirmDialogWithInput({
   }, [isOpen]);
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter") {
-      onConfirm(inputValue); // Pass inputValue on Enter
+    if (event.key === "Enter" && isInputValid) {
+      onConfirm(inputValue); // Pass inputValue on Enter only if valid
     } else if (event.key === "Escape") {
       onCancel();
     }
   };
 
   const handleConfirm = () => {
-    onConfirm(inputValue); // Pass inputValue on button click
+    if (isInputValid) {
+      onConfirm(inputValue); // Pass inputValue on button click only if valid
+    }
   };
 
   return (
@@ -69,7 +73,11 @@ export default function ConfirmDialogWithInput({
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          className="mt-2 w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+          className={`mt-2 w-full rounded-md border px-3 py-2 focus:outline-none focus:ring-2 ${
+            isInputValid
+              ? "border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400"
+              : "border-red-300 dark:border-red-600 focus:ring-red-500 dark:focus:ring-red-400"
+          } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100`}
           placeholder="Type 'Delete' here"
           aria-label="Confirm deletion by typing Delete"
         />
@@ -84,10 +92,15 @@ export default function ConfirmDialogWithInput({
           <Button
             variant={isDestructive ? "primary" : "outline"}
             onClick={handleConfirm}
+            disabled={!isInputValid}
             className={`px-4 py-2 ${
               isDestructive
-                ? "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
-                : "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                ? isInputValid
+                  ? "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600"
+                  : "bg-red-300 text-white cursor-not-allowed dark:bg-red-700 dark:text-gray-300"
+                : isInputValid
+                ? "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                : "bg-blue-300 text-white cursor-not-allowed dark:bg-blue-700 dark:text-gray-300"
             }`}
           >
             {confirmText}
