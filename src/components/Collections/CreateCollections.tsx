@@ -84,17 +84,14 @@ const CollectionCreate: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     if (!name.trim()) {
       setError("Collection name is required");
       return;
     }
-
     if (selectedBooks.length === 0) {
       setError("Please select at least one book");
       return;
     }
-
     try {
       setIsSubmitting(true);
       const payload = {

@@ -76,6 +76,7 @@ export const fetchProcessingBooks = async () => {
 };
 
 // ------------------ 4. Delete Books ------------------
+// ------------------ 4. Delete Books ------------------
 export const deleteBooks = async (bookIds: string[]) => {
   try {
     console.log("deleteBooks: Sending request to delete books:", bookIds);

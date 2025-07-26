@@ -1,13 +1,15 @@
-import { FC, useCallback } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useSidebar } from '../../context/SidebarContext';
+import { FC, useCallback } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useSidebar } from "../../context/SidebarContext";
 import {
-  BoxCubeIcon,
-  UserCircleIcon,
-  ChatIcon,
-  FolderIcon,
-  FileIcon,
-} from '../../icons';
+  FolderPlus,
+  FilePlus,
+  UserPlus,
+  MessageSquare,
+  ToolCase,
+  Menu,
+  X,
+} from "lucide-react";
 
 interface ProjectSidebarProps {
   selectedOption: string;
@@ -22,35 +24,40 @@ type NavItem = {
   openInNewTab?: boolean;
 };
 
-const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOption, projectId }) => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+const ProjectSidebar: FC<ProjectSidebarProps> = ({
+  selectedOption,
+  onSelectOption,
+  projectId,
+}) => {
+  const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } =
+    useSidebar();
   const location = useLocation();
 
   const navItems: NavItem[] = [
     {
-      icon: <FolderIcon />,
-      name: 'Add Collections',
+      icon: <FolderPlus className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Add Collections",
       path: `/project/${projectId}/collections/add`,
     },
     {
-      icon: <FileIcon />,
-      name: 'Add Books to Project',
+      icon: <FilePlus className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Add Books to Project",
       path: `/project/${projectId}/books/add`,
     },
     {
-      icon: <UserCircleIcon />,
-      name: 'Add Members',
+      icon: <UserPlus className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Add Members",
       path: `/project/${projectId}/members/add`,
     },
     {
-      icon: <ChatIcon />,
-      name: 'Chatbot',
+      icon: <MessageSquare className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Chatbot",
       path: `/${projectId}/chatbot`,
       openInNewTab: true,
     },
     {
-      icon: <BoxCubeIcon />,
-      name: 'Use Tools',
+      icon: <ToolCase className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Use Tools",
       path: `/project/${projectId}/tools/welcome`,
     },
   ];
@@ -61,54 +68,65 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
   );
 
   const handleNavClick = (nav: NavItem) => {
-    // Only update selectedOption for non-new-tab items
     if (!nav.openInNewTab) {
       onSelectOption(nav.name);
+      // Close mobile sidebar on navigation
+      if (isMobileOpen) {
+        toggleMobileSidebar();
+      }
     }
     if (nav.openInNewTab) {
-      window.open(nav.path, '_blank', 'noopener,noreferrer');
+      window.open(nav.path, "_blank", "noopener,noreferrer");
     }
   };
 
   const renderMenuItems = () => (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-col gap-2">
       {navItems.map((nav) => (
         <li key={nav.name}>
           {nav.openInNewTab ? (
             <button
               onClick={() => handleNavClick(nav)}
-              className={`menu-item group ${isActive(nav.path) ? 'menu-item-active' : 'menu-item-inactive'} ${
-                !isExpanded && !isHovered ? 'justify-center' : 'justify-start'
-              }`}
+              className={`menu-item group flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${
+                isActive(nav.path)
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-100"
+              } ${!isExpanded && !isMobileOpen ? "justify-center" : "justify-start"}`}
             >
               <span
-                className={`menu-item-icon-size ${
-                  isActive(nav.path) ? 'menu-item-icon-active' : 'menu-item-inactive'
-                }`}
+                className={`w-5 h-5 ${
+                  isActive(nav.path)
+                    ? "text-blue-600"
+                    : "text-gray-500 group-hover:text-blue-600"
+                } transition-colors duration-200`}
               >
                 {nav.icon}
               </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
+              {(isExpanded || isMobileOpen) && (
+                <span className="text-xs font-medium">{nav.name}</span>
               )}
             </button>
           ) : (
             <Link
               to={nav.path}
-              onClick={() => onSelectOption(nav.name)}
-              className={`menu-item group ${isActive(nav.path) ? 'menu-item-active' : 'menu-item-inactive'} ${
-                !isExpanded && !isHovered ? 'justify-center' : 'justify-start'
-              }`}
+              onClick={() => handleNavClick(nav)}
+              className={`menu-item group flex items-center gap-2 p-2 rounded-md transition-all duration-200 ${
+                isActive(nav.path)
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-100"
+              } ${!isExpanded && !isMobileOpen ? "justify-center" : "justify-start"}`}
             >
               <span
-                className={`menu-item-icon-size ${
-                  isActive(nav.path) ? 'menu-item-icon-active' : 'menu-item-inactive'
-                }`}
+                className={`w-5 h-5 ${
+                  isActive(nav.path)
+                    ? "text-blue-600"
+                    : "text-gray-500 group-hover:text-blue-600"
+                } transition-colors duration-200`}
               >
                 {nav.icon}
               </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className="menu-item-text">{nav.name}</span>
+              {(isExpanded || isMobileOpen) && (
+                <span className="text-xs font-medium">{nav.name}</span>
               )}
             </Link>
           )}
@@ -118,21 +136,44 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({ selectedOption, onSelectOptio
   );
 
   return (
-    <aside
-      className={`bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 transition-all duration-300 ease-in-out border-r border-gray-200 
-        ${isExpanded || isMobileOpen ? 'w-[290px]' : isHovered ? 'w-[290px]' : 'w-[90px]'}
-        ${isMobileOpen ? 'block' : 'hidden'} md:block`}
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar p-5">
-        <nav className="mb-6">
-          <div className="flex flex-col gap-4">
-            <div>{renderMenuItems()}</div>
-          </div>
-        </nav>
-      </div>
-    </aside>
+    <>
+      {/* Mobile Toggle Button */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-md"
+        onClick={toggleMobileSidebar}
+      >
+        {isMobileOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <Menu className="w-6 h-6" />
+        )}
+      </button>
+
+      {/* Sidebar */}
+      <aside
+        className={`bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 transition-all duration-300 ease-in-out border-r border-gray-200 fixed md:static z-40
+        ${
+          isMobileOpen
+            ? "block w-[240px] h-screen"
+            : "hidden md:block " +
+              (isExpanded ? "w-[240px]" : "w-[60px]")
+        }`}
+      >
+        <div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear no-scrollbar p-3">
+          {/* Toggle Button for Desktop */}
+          <button
+            className="mb-4 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={toggleSidebar}
+          >
+            <Menu className="w-5 h-5" /> {/* Fixed to Menu icon */}
+          </button>
+
+          <nav className="flex-1">
+            <div className="flex flex-col gap-2">{renderMenuItems()}</div>
+          </nav>
+        </div>
+      </aside>
+    </>
   );
 };
 
