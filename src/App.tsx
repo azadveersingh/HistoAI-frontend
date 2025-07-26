@@ -31,8 +31,10 @@ import CollectionManager from "./components/Collections/CollectionManager";
 import ProjectPage from "./components/Projects/ProjectPage";
 import ProjectCollections from "./components/Collections/ProjectCollections";
 import AllCollections from "./components/Collections/AllCollections";
+import CollectionDetails from "./components/Collections/CollectionDetails";
 import ProjectBooks from "./components/Books/ProjectBooks";
 import AllBooks from "./components/Books/AllBooks";
+import CollectionBooks from "./components/Books/CollectionBooks";
 import ProjectMembers from "./components/Members/ProjectMembers";
 import AllMembers from "./components/Members/AllMembers";
 import ChatbotPage from "./components/Tools/Chatbot";
@@ -40,6 +42,7 @@ import ToolsPage from "./components/Tools/ToolsPage";
 import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage";
 import BookUploadManager from "./components/Books/BookUploadManager";
 import { AuthProvider } from "./context/AuthProvider";
+
 
 export default function App() {
   return (
@@ -74,6 +77,14 @@ export default function App() {
               element={
                 <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
                   <AllCollections />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/collections/:collectionId"
+              element={
+                <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
+                  <CollectionDetails />
                 </ProtectedRoute>
               }
             />

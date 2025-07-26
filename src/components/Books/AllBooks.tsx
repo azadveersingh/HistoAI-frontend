@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
-import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook } from "../../services/bookServices";
+import { useParams, useLocation } from "react-router-dom";
+import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails } from "../../services/bookServices";
+import { fetchCollectionById, updateCollection } from "../../services/collectionServices";
 import Checkbox from "../../components/form/input/Checkbox";
 import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
@@ -10,11 +11,13 @@ import { api as API_BASE } from "../../api/api";
 import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
 import ConfirmDialogWithInput from "../../components/ui/confirmation/ConfirmDialogWithInput";
 import { Modal } from "../../components/ui/modal/index";
+import EditBookDetailsModal from "./EditBookDetailsModal";
 
 interface Book {
   _id: string;
   bookName: string;
   author?: string;
+  author2?: string;
   edition?: string;
   fileName?: string;
   frontPageImagePath?: string;
@@ -31,13 +34,22 @@ interface Project {
 interface AllBooksProps {
   searchQuery?: string;
   isCentralRepository?: boolean;
+  collectionId?: string;
+  onBooksAdded?: (bookIds: string[]) => void;
 }
 
-export default function AllBooks({ searchQuery = "", isCentralRepository = false }: AllBooksProps) {
+export default function AllBooks({
+  searchQuery = "",
+  isCentralRepository = false,
+  collectionId,
+  onBooksAdded,
+}: AllBooksProps) {
   const { id: projectId } = useParams<{ id: string }>();
+  const location = useLocation();
   const [books, setBooks] = useState<Book[]>([]);
   const [checkedBooks, setCheckedBooks] = useState<string[]>([]);
   const [projectBookIds, setProjectBookIds] = useState<string[]>([]);
+  const [collectionBookIds, setCollectionBookIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [alert, setAlert] = useState<{ variant: string; title: string; message: string } | null>(null);
@@ -45,6 +57,8 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
   const [showInputDialog, setShowInputDialog] = useState(false);
   const [showVisibilityDialog, setShowVisibilityDialog] = useState(false);
   const [showProjectListModal, setShowProjectListModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [visibilityBookId, setVisibilityBookId] = useState<string | null>(null);
   const [visibilityTarget, setVisibilityTarget] = useState<"public" | "private" | null>(null);
   const [associatedProjects, setAssociatedProjects] = useState<Project[]>([]);
@@ -54,13 +68,22 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
     const loadBooks = async () => {
       try {
         setLoading(true);
-        const [allBooks, projectBooks] = await Promise.all([
-          fetchAllBooks(), // Only returns books with completed OCR
-          projectId && !isCentralRepository ? fetchProjectBooks(projectId) : Promise.resolve([]),
-        ]);
+        const promises = [
+          fetchAllBooks(),
+          projectId && !isCentralRepository && !collectionId ? fetchProjectBooks(projectId) : Promise.resolve([]),
+        ];
+
+        if (collectionId) {
+          promises.push(fetchCollectionById(collectionId));
+        } else {
+          promises.push(Promise.resolve(null));
+        }
+
+        const [allBooks, projectBooks, collectionData] = await Promise.all(promises);
 
         console.log("Fetched all books:", allBooks);
         console.log("Fetched project books:", projectBooks);
+        console.log("Fetched collection data:", collectionData);
 
         const validBooks = allBooks.filter(
           (book: Book) => book && book._id && typeof book._id === "string"
@@ -70,6 +93,11 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
         }
         setBooks(validBooks);
         setProjectBookIds(projectBooks.map((book: Book) => book._id));
+        if (collectionData && Array.isArray(collectionData.bookIds)) {
+          setCollectionBookIds(collectionData.bookIds);
+        } else {
+          setCollectionBookIds([]);
+        }
       } catch (err: any) {
         const errorMessage = err.response?.data?.error || err.message || "Failed to load books";
         setError(errorMessage);
@@ -79,7 +107,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
       }
     };
     loadBooks();
-  }, [projectId, isCentralRepository]);
+  }, [projectId, isCentralRepository, collectionId, location.state]);
 
   const handleCheckboxChange = (bookId: string, checked: boolean) => {
     setCheckedBooks((prev) =>
@@ -87,44 +115,62 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
     );
   };
 
-  const handleAddToProject = async () => {
-    if (!projectId) {
+  const handleAddToProjectOrCollection = async () => {
+    if (collectionId) {
+      if (checkedBooks.length === 0) {
+        setAlert({
+          variant: "info",
+          title: "No Books Selected",
+          message: "Please select at least one book to add to the collection.",
+        });
+        return;
+      }
+
+      setShowConfirmDialog(true);
+    } else if (projectId) {
+      if (checkedBooks.length === 0) {
+        setAlert({
+          variant: "info",
+          title: "No Books Selected",
+          message: "Please select at least one book to add to the project.",
+        });
+        return;
+      }
+
+      setShowConfirmDialog(true);
+    } else {
       setAlert({
         variant: "error",
-        title: "No Project Selected",
-        message: "Please select a project to add books to.",
+        title: "No Target Selected",
+        message: "Please select a project or collection to add books to.",
       });
-      return;
     }
-
-    if (checkedBooks.length === 0) {
-      setAlert({
-        variant: "info",
-        title: "No Books Selected",
-        message: "Please select at least one book to add to the project.",
-      });
-      return;
-    }
-
-    setShowConfirmDialog(true);
   };
 
   const handleConfirmAdd = async () => {
     try {
-      await addBooksToProject(projectId!, checkedBooks);
-      setProjectBookIds((prev) => [...prev, ...checkedBooks]);
+      if (collectionId) {
+        await updateCollection(collectionId, { addBookIds: checkedBooks });
+        setCollectionBookIds((prev) => [...prev, ...checkedBooks]);
+        if (onBooksAdded) {
+          onBooksAdded(checkedBooks);
+        }
+      } else if (projectId) {
+        await addBooksToProject(projectId, checkedBooks);
+        setProjectBookIds((prev) => [...prev, ...checkedBooks]);
+      }
       setCheckedBooks([]);
       setAlert({
         variant: "success",
         title: "Books Added",
-        message: `${checkedBooks.length} book(s) added to the project successfully.`,
+        message: `${checkedBooks.length} book(s) added successfully.`,
       });
     } catch (err: any) {
-      console.error("Error adding books to project:", err);
+      console.error("Error adding books:", err);
       setAlert({
         variant: "error",
         title: "Error",
-        message: err.response?.data?.error || "An error occurred while adding books to the project.",
+        message: err.response?.data?.error || "An error occurred while adding books.",
       });
     } finally {
       setShowConfirmDialog(false);
@@ -186,6 +232,59 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
       });
     } finally {
       setShowInputDialog(false);
+    }
+  };
+
+  const handleEditBook = (book: Book) => {
+    if (role !== "book_manager") {
+      setAlert({
+        variant: "error",
+        title: "Unauthorized",
+        message: "Only book managers can edit book details.",
+      });
+      return;
+    }
+    if (checkedBooks.length !== 1) {
+      setAlert({
+        variant: "info",
+        title: "Invalid Selection",
+        message: "Please select exactly one book to edit.",
+      });
+      return;
+    }
+    setSelectedBook(book);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateBook = async (updatedBook: Book) => {
+    try {
+      await updateBookDetails(updatedBook._id, {
+        bookName: updatedBook.bookName,
+        author: updatedBook.author || "",
+        author2: updatedBook.author2 || "",
+        edition: updatedBook.edition || "",
+      });
+      setBooks((prev) =>
+        prev.map((book) =>
+          book._id === updatedBook._id ? { ...book, ...updatedBook } : book
+        )
+      );
+      setAlert({
+        variant: "success",
+        title: "Book Updated",
+        message: "Book details updated successfully.",
+      });
+      setCheckedBooks([]);
+    } catch (err: any) {
+      console.error("Error updating book:", err);
+      setAlert({
+        variant: "error",
+        title: "Error",
+        message: err.response?.data?.error || "An error occurred while updating book details.",
+      });
+    } finally {
+      setShowEditModal(false);
+      setSelectedBook(null);
     }
   };
 
@@ -279,7 +378,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
       );
     }
     const projectText = projectCount === 1 ? "1 project" : `${projectCount} projects`;
-    const collectionText = collectionCount === 1 ? "1 collection" : `${collectionCount} collections`;
+    const collectionText = collectionCount === 1 ? "1 collection" : `${projectCount} collections`;
     const parts = [];
     if (projectCount > 0) parts.push(projectText);
     if (collectionCount > 0) parts.push(collectionText);
@@ -315,15 +414,23 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
     }
   };
 
+  const getAuthorDisplay = (book: Book) => {
+    const primaryAuthor = book.author || "Unknown Author";
+    const secondaryAuthor = book.author2?.trim();
+    return secondaryAuthor ? `${primaryAuthor}, ${secondaryAuthor}` : primaryAuthor;
+  };
+
   const sortedBooks = useMemo(() => {
     return [...books].sort((a, b) => {
       const aChecked = checkedBooks.includes(a._id);
       const bChecked = checkedBooks.includes(b._id);
       if (aChecked && !bChecked) return -1;
       if (!aChecked && bChecked) return 1;
-      const aBookName = a.bookName || "Untitled";
-      const bBookName = b.bookName || "Untitled";
-      return aBookName.localeCompare(bBookName);
+
+      // Sort by createdAt in descending order (newest first)
+      const aDate = a.createdAt ? new Date(a.createdAt).getTime() : Number.MIN_SAFE_INTEGER;
+      const bDate = b.createdAt ? new Date(b.createdAt).getTime() : Number.MIN_SAFE_INTEGER;
+      return bDate - aDate; // Descending order
     });
   }, [books, checkedBooks]);
 
@@ -333,6 +440,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
         [
           book.bookName || "",
           book.author || "",
+          book.author2 || "",
           book.edition || "",
           formatDate(book.createdAt),
           book.pages?.toString() || "",
@@ -350,14 +458,26 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
       title={
         <div className="flex justify-between items-center">
           <span>All Books</span>
-          <Button
-            onClick={isCentralRepository ? handleDeleteBooks : handleAddToProject}
-            disabled={checkedBooks.length === 0 || (isCentralRepository && role !== "book_manager")}
-            variant="primary"
-            className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
-          >
-            {isCentralRepository ? "Delete" : "Add Selected to Project"}
-          </Button>
+          <div className="flex space-x-2">
+            {isCentralRepository && role === "book_manager" && (
+              <Button
+                onClick={() => handleEditBook(books.find((book) => book._id === checkedBooks[0])!)}
+                disabled={checkedBooks.length !== 1}
+                variant="primary"
+                className="text-sm py-1 px-3 bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                Edit
+              </Button>
+            )}
+            <Button
+              onClick={isCentralRepository ? handleDeleteBooks : handleAddToProjectOrCollection}
+              disabled={checkedBooks.length === 0 || (isCentralRepository && role !== "book_manager")}
+              variant="primary"
+              className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {isCentralRepository ? "Delete" : collectionId ? "Add Selected to Collection" : "Add Selected to Project"}
+            </Button>
+          </div>
         </div>
       }
     >
@@ -379,7 +499,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
                 Book Name
               </TableCell>
               <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Author
+                Authors
               </TableCell>
               <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Edition
@@ -403,7 +523,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
             {filteredBooks.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={isCentralRepository ? 7 : 5} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No books found matching your search
+                  No books found
                 </TableCell>
               </TableRow>
             ) : (
@@ -422,7 +542,17 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
                           disabled={role !== "book_manager"}
                           label=""
                         />
-                      ) : projectBookIds.includes(book._id) ? (
+                      ) : collectionId && collectionBookIds.includes(book._id) ? (
+                        <div title="Already added to this collection" className="cursor-not-allowed opacity-60">
+                          <Checkbox
+                            id={`book-${book._id}`}
+                            checked={true}
+                            disabled={true}
+                            onChange={() => {}}
+                            label=""
+                          />
+                        </div>
+                      ) : projectId && !collectionId && projectBookIds.includes(book._id) ? (
                         <div title="Already added to this project" className="cursor-not-allowed opacity-60">
                           <Checkbox
                             id={`book-${book._id}`}
@@ -452,7 +582,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
                       {book.bookName || "Untitled"}
                     </a>
                   </TableCell>
-                  <TableCell className="p-4">{book.author || "Unknown Author"}</TableCell>
+                  <TableCell className="p-4">{getAuthorDisplay(book)}</TableCell>
                   <TableCell className="p-4">{book.edition || "N/A"}</TableCell>
                   <TableCell className="p-4">{formatDate(book.createdAt)}</TableCell>
                   {isCentralRepository && (
@@ -488,7 +618,7 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
           message={
             isCentralRepository
               ? `Are you sure you want to delete ${checkedBooks.length} book(s)? This action cannot be undone.`
-              : `Are you sure you want to add ${checkedBooks.length} book(s) to the project?`
+              : `Are you sure you want to add ${checkedBooks.length} book(s) to the ${collectionId ? "collection" : "project"}?`
           }
           onConfirm={isCentralRepository ? handleConfirmDelete : handleConfirmAdd}
           onCancel={() => setShowConfirmDialog(false)}
@@ -557,6 +687,15 @@ export default function AllBooks({ searchQuery = "", isCentralRepository = false
             </div>
           </div>
         </Modal>
+        <EditBookDetailsModal
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedBook(null);
+          }}
+          book={selectedBook}
+          onUpdate={handleUpdateBook}
+        />
       </div>
     </ComponentCard>
   );

@@ -303,7 +303,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                             id={`collection-${collection._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             label=""
                           />
                         </div>
@@ -317,7 +317,14 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                       )}
                     </td>
                   </TableCell>
-                  <TableCell className="p-4">{collection.name}</TableCell>
+                  <TableCell className="p-4">
+                    <button
+                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      onClick={() => navigate(`/collections/${collection._id}`)}
+                    >
+                      {collection.name}
+                    </button>
+                  </TableCell>
                   <TableCell className="p-4">
                     <button
                       className="text-blue-600 dark:text-blue-400 hover:underline"

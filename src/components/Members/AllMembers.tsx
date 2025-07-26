@@ -25,6 +25,10 @@ interface Member {
 
 interface AllMembersProps {
   searchQuery?: string;
+    checkedMembers?: string[]; // Controlled checked list (optional)
+  setCheckedMembers?: React.Dispatch<React.SetStateAction<string[]>>;
+  hideAddButton?: boolean;
+  onMembersUpdate?: (members: Member[]) => void;
 }
 
 export default function AllMembers({ searchQuery: externalSearchQuery = "" }: AllMembersProps) {
@@ -276,3 +280,5 @@ export default function AllMembers({ searchQuery: externalSearchQuery = "" }: Al
     </ComponentCard>
   );
 }
+
+
