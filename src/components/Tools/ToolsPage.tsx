@@ -26,6 +26,8 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedCollections, setSelectedCollections] = useState<string[]>([]);
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
+  const [collectionSearch, setCollectionSearch] = useState("");
+  const [bookSearch, setBookSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -68,6 +70,15 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  // Filter collections and books based on search terms
+  const filteredCollections = collections.filter((col) =>
+    (col.name || "Untitled Collection").toLowerCase().includes(collectionSearch.toLowerCase())
+  );
+
+  const filteredBooks = books.filter((book) =>
+    (book.bookName || "Untitled Book").toLowerCase().includes(bookSearch.toLowerCase())
+  );
+
   if (loading) return <div className="text-center text-gray-600 dark:text-gray-400">Loading collections and books...</div>;
   if (error) return <div className="text-center text-red-600 dark:text-red-400">{error}</div>;
 
@@ -79,11 +90,18 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
         {/* Collections List */}
         <div className="flex-1">
           <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">Collections</h3>
-          {collections.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No collections available</p>
+          <input
+            type="text"
+            placeholder="Search collections..."
+            value={collectionSearch}
+            onChange={(e) => setCollectionSearch(e.target.value)}
+            className="w-full p-2 mb-4 border rounded-lg dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {filteredCollections.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">No collections found</p>
           ) : (
             <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-              {collections.map((col) => (
+              {filteredCollections.map((col) => (
                 <Checkbox
                   key={col._id}
                   id={`collection-${col._id}`}
@@ -99,11 +117,18 @@ export default function ToolsPage({ projectId }: ToolsPageProps) {
         {/* Books List */}
         <div className="flex-1">
           <h3 className="text-lg font-medium mb-2 text-gray-700 dark:text-gray-300">Books</h3>
-          {books.length === 0 ? (
-            <p className="text-gray-500 dark:text-gray-400">No books available</p>
+          <input
+            type="text"
+            placeholder="Search books..."
+            value={bookSearch}
+            onChange={(e) => setBookSearch(e.target.value)}
+            className="w-full p-2 mb-4 border rounded-lg dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {filteredBooks.length === 0 ? (
+            <p className="text-gray-500 dark:text-gray-400">No books found</p>
           ) : (
             <div className="flex flex-col gap-2 max-h-96 overflow-y-auto">
-              {books.map((book) => (
+              {filteredBooks.map((book) => (
                 <Checkbox
                   key={book._id}
                   id={`book-${book._id}`}
