@@ -114,73 +114,85 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
     checkedMembers.some((id) => !initialCheckedMembers.includes(id)) ||
     initialCheckedMembers.some((id) => !checkedMembers.includes(id));
 
-  if (loading) return <div>Loading project members...</div>;
-  if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
+  if (loading) return <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">Loading project members...</div>;
+  if (error) return <div className="text-sm sm:text-base text-red-600 dark:text-red-400">{error}</div>;
 
   return (
-    <ComponentCard title="Project Members">
-      <div className="flex flex-col gap-4">
+    <ComponentCard
+      title={
+        <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
+          Project Members
+        </span>
+      }
+      className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-5 shadow-sm"
+    >
+      <div className="flex flex-col gap-3 sm:gap-4">
         {alert && (
           <Alert
             variant={alert.variant}
             title={alert.title}
             message={alert.message}
+            className="text-sm sm:text-base"
           />
         )}
 
-        <Table className="border-collapse">
-          <TableHeader className="bg-gray-100 dark:bg-gray-800">
-            <TableRow>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Select
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Member Name
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Email
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Role
-              </TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members.length === 0 ? (
+        <div className="max-h-[60vh] overflow-y-auto overflow-x-auto w-full">
+          <Table className="table-fixed min-w-full border-collapse text-sm sm:text-base">
+            <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <TableRow>
-                <TableCell colSpan={4} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No members found for this project
+                <TableCell isHeader className="w-16 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Select
+                </TableCell>
+                <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Member Name
+                </TableCell>
+                <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Email
+                </TableCell>
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Role
                 </TableCell>
               </TableRow>
-            ) : (
-              members.map((member) => (
-                <TableRow
-                  key={member._id}
-                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-                >
-                  <TableCell className="p-4">
-                    <Checkbox
-                      id={`member-${member._id}`}
-                      checked={checkedMembers.includes(member._id)}
-                      onChange={(checked) => handleCheckboxChange(member._id, checked)}
-                      label=""
-                    />
+            </TableHeader>
+            <TableBody>
+              {members.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                    No members found for this project
                   </TableCell>
-                  <TableCell className="p-4">{member.fullName}</TableCell>
-                  <TableCell className="p-4">{member.email}</TableCell>
-                  <TableCell className="p-4 capitalize">{member.role}</TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                members.map((member) => (
+                  <TableRow
+                    key={member._id}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    <TableCell className="w-16 p-2 sm:p-4">
+                      <Checkbox
+                        id={`member-${member._id}`}
+                        checked={checkedMembers.includes(member._id)}
+                        onChange={(checked) => handleCheckboxChange(member._id, checked)}
+                        label=""
+                        className="text-gray-700 dark:text-gray-200 scale-100"
+                        aria-label={`Select member ${member.fullName || "Unknown"}`}
+                      />
+                    </TableCell>
+                    <TableCell className="w-1/3 p-2 sm:p-4 text-gray-800 dark:text-gray-100">{member.fullName}</TableCell>
+                    <TableCell className="w-1/3 p-2 sm:p-4 text-gray-800 dark:text-gray-100">{member.email}</TableCell>
+                    <TableCell className="w-1/6 p-2 sm:p-4 text-gray-800 dark:text-gray-100 capitalize">{member.role}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-        <div className="mt-4 text-right">
+        <div className="mt-3 sm:mt-4 text-right">
           <button
             onClick={handleSaveChanges}
             disabled={!hasChanges}
-            className={`bg-blue-600 text-white font-semibold py-2 px-4 rounded transition ${
-              !hasChanges ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700"
+            className={`bg-blue-600 dark:bg-blue-700 text-white font-semibold py-1.5 sm:py-2 px-3 sm:px-4 rounded-md transition text-sm sm:text-base ${
+              !hasChanges ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-700 dark:hover:bg-blue-800"
             }`}
           >
             Save Changes
@@ -196,6 +208,7 @@ export default function ProjectMembers({ projectId }: ProjectMembersProps) {
           onCancel={() => setShowConfirmDialog(false)}
           confirmText="Remove"
           isDestructive={true}
+          className="text-sm sm:text-base"
         />
       </div>
     </ComponentCard>

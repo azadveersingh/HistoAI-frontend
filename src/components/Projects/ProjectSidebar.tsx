@@ -34,6 +34,11 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
   const location = useLocation();
 
   const navItems: NavItem[] = [
+     {
+      icon: <ToolCase className="w-5 h-5" strokeWidth={1.5} />,
+      name: "Use Tools",
+      path: `/project/${projectId}/tools/welcome`,
+    },
     {
       icon: <FolderPlus className="w-5 h-5" strokeWidth={1.5} />,
       name: "Add Collections",
@@ -55,16 +60,19 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
       path: `/${projectId}/chatbot`,
       openInNewTab: true,
     },
-    {
-      icon: <ToolCase className="w-5 h-5" strokeWidth={1.5} />,
-      name: "Use Tools",
-      path: `/project/${projectId}/tools/welcome`,
-    },
+   
   ];
 
   const isActive = useCallback(
-    (path: string) => location.pathname === path,
-    [location.pathname]
+    (path: string) => {
+    
+      return (
+        location.pathname === path ||
+        (path === `/project/${projectId}/tools/welcome` &&
+          location.pathname === `/project/${projectId}`)
+      );
+    },
+    [location.pathname, projectId]
   );
 
   const handleNavClick = (nav: NavItem) => {

@@ -47,9 +47,9 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <PageBreadcrumb pageTitle="Book Management" />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mx-auto px-4">
         <div
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 mb-6"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 mb-2 "
           role="tablist"
           aria-label="Book Management Tabs"
         >
@@ -95,8 +95,10 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
               <div className="flex justify-end mb-4">
                 <Button
                   variant="primary"
+
                   onClick={() => navigate("/books/upload", { state: { fromTab: "tab2" } })}
                   className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-200"
+
                 >
                   Upload Book
                 </Button>

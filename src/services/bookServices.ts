@@ -37,9 +37,7 @@ export const fetchAllBooks = async () => {
     const response = await axios.get(`${API_BASE}/api/books/`, {
       headers: getAuthHeaders(),
     });
-
     console.log("fetchAllBooks response:", response.data);
-
     const books = response.data.books || [];
     if (!Array.isArray(books)) {
       console.error("fetchAllBooks: Expected an array, got:", response.data.books);
@@ -69,7 +67,7 @@ export const fetchProcessingBooks = async () => {
     }
     return books.map((book: any) => ({
       ...book,
-      author2: book.author2 || "", // Default to empty string if not present
+      author2: book.author2 || "",
     }));
   } catch (error) {
     console.error("fetchProcessingBooks error:", error);

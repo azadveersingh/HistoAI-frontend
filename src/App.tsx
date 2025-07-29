@@ -141,7 +141,11 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
-      <ToastContainer />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        theme="colored"
+        style={{ zIndex: 100000 }} />
     </AuthProvider>
   );
 }

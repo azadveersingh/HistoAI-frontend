@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { fetchVisibleCollections, fetchProjectCollections, addCollectionsToProject, deleteCollection } from "../../services/collectionServices";
@@ -212,17 +213,23 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
     }
   };
 
-  if (loading) return <div>Loading collections...</div>;
+  if (loading) return <div className="text-gray-800 dark:text-gray-100">Loading collections...</div>;
   if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
 
   return (
     <ComponentCard
       title={
         hideCreateButton ? (
-          <span>All Collections</span>
+          <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
+            All Collections
+          </span>
         ) : (
-          <div className="flex justify-between items-center">
-            <span>All Collections</span>
+          <div className="flex flex-col sm:flex-row sm:justify-between items-center w-full gap-2">
+            <div className="flex-1 text-center">
+              <span className="text-xl sm:text-2xl md:text-3xl text-gray-900 dark:text-gray-100">
+                All Collections
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               {isDashboardCollections ? (
                 <Button
@@ -230,7 +237,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                   disabled={checkedCollections.length === 0}
                   variant="primary"
                   title={checkedCollections.length === 0 ? "Select at least one collection to remove" : ""}
-                  className="text-sm py-1 px-3 bg-red-500 hover:bg-red-600 text-white"
+                  className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-red-500 hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 text-white"
                 >
                   Remove Collection
                 </Button>
@@ -240,7 +247,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                   disabled={checkedCollections.length === 0 || !projectId}
                   variant="primary"
                   title={checkedCollections.length === 0 ? "Select at least one collection to add" : ""}
-                  className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
+                  className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white"
                 >
                   Add Selected to Project
                 </Button>
@@ -248,7 +255,7 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
               <Button
                 onClick={handleCreateCollection}
                 variant="primary"
-                className="text-sm py-1 px-3 bg-green-500 hover:bg-green-600 text-white"
+                className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-green-500 hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700 text-white"
               >
                 Create Collection
               </Button>
@@ -265,45 +272,45 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
             message={alert.message}
           />
         )}
-        <Table className="border-collapse">
-          <TableHeader className="bg-gray-100 dark:bg-gray-800">
-            <TableRow>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Select
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Collection Name
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                No. of Books
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Created At
-              </TableCell>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCollections.length === 0 ? (
+        <div className="max-h-[77vh] overflow-y-auto overflow-x-auto w-full">
+          <Table className="border-collapse min-w-full">
+            <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <TableRow>
-                <TableCell colSpan={4} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No collections found matching your search
+                <TableCell isHeader className="p-2 sm:p-4 text-left font-semibold text-sm sm:text-base text-gray-700 dark:text-gray-200">
+                  Select
+                </TableCell>
+                <TableCell isHeader className="p-2 sm:p-4 text-left font-semibold text-sm sm:text-base text-gray-700 dark:text-gray-200">
+                  Collection Name
+                </TableCell>
+                <TableCell isHeader className="p-2 sm:p-4 text-left font-semibold text-sm sm:text-base text-gray-700 dark:text-gray-200">
+                  No. of Books
+                </TableCell>
+                <TableCell isHeader className="p-2 sm:p-4 text-left font-semibold text-sm sm:text-base text-gray-700 dark:text-gray-200">
+                  Created At
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredCollections.map((collection) => (
-                <TableRow
-                  key={collection._id}
-                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-                >
-                  <TableCell className="p-4">
-                    <td className="p-3">
+            </TableHeader>
+            <TableBody>
+              {filteredCollections.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="p-2 sm:p-4 text-center text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                    No collections found matching your search
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredCollections.map((collection) => (
+                  <TableRow
+                    key={collection._id}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    <TableCell className="p-2 sm:p-4">
                       {projectId && projectCollectionIds.includes(collection._id) ? (
                         <div title="Already added to this project" className="cursor-not-allowed opacity-60">
                           <Checkbox
                             id={`collection-${collection._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => { }}
+                            onChange={() => {}}
                             label=""
                           />
                         </div>
@@ -315,45 +322,47 @@ export default function AllCollections({ hideCreateButton = false, searchQuery =
                           label=""
                         />
                       )}
-                    </td>
-                  </TableCell>
-                  <TableCell className="p-4">
-                    <button
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                      onClick={() => navigate(`/collections/${collection._id}`)}
-                    >
-                      {collection.name}
-                    </button>
-                  </TableCell>
-                  <TableCell className="p-4">
-                    <button
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                      onClick={() => {
-                        const bookList = books.filter((book) => collection.bookIds.includes(book._id));
-                        setSelectedBookList(bookList);
-                        setModalTitle(collection.name);
-                        setShowModal(true);
-                      }}
-                    >
-                      {collection.bookIds.length}
-                    </button>
-                  </TableCell>
-                  <TableCell className="p-4">{formatDate(collection.createdAt)}</TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell className="p-2 sm:p-4">
+                      <button
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                        onClick={() => navigate(`/collections/${collection._id}`)}
+                      >
+                        {collection.name}
+                      </button>
+                    </TableCell>
+                    <TableCell className="p-2 sm:p-4">
+                      <button
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                        onClick={() => {
+                          const bookList = books.filter((book) => collection.bookIds.includes(book._id));
+                          setSelectedBookList(bookList);
+                          setModalTitle(collection.name);
+                          setShowModal(true);
+                        }}
+                      >
+                        {collection.bookIds.length}
+                      </button>
+                    </TableCell>
+                    <TableCell className="p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">
+                      {formatDate(collection.createdAt)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
         <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={`Books in "${modalTitle}"`}>
-          <div className="space-y-2 p-4">
+          <div className="space-y-2 p-2 sm:p-4">
             {selectedBookList.length > 0 ? (
               selectedBookList.map((book) => (
-                <div key={book._id} className="text-gray-800 dark:text-gray-100">
+                <div key={book._id} className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
                   {book.bookName || "Untitled"}
                 </div>
               ))
             ) : (
-              <div className="text-gray-500 dark:text-gray-400">No books found.</div>
+              <div className="text-sm sm:text-base text-gray-500 dark:text-gray-400">No books found.</div>
             )}
           </div>
         </Modal>

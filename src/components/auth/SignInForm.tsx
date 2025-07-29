@@ -13,7 +13,7 @@ export default function SignInForm() {
   const navigate = useNavigate();
 
   const { user, loading, signin, role } = useAuth(); // Use AuthProvider's signin
-  const [email, setEmail] = useState("admin@gmail.com");
+  const [email, setEmail] = useState("gaurav.soni@aicentre.org");
   const [password, setPassword] = useState("Gaurav1234");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);

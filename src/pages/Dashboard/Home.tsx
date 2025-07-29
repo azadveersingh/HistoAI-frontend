@@ -1,4 +1,3 @@
-// src/pages/Dashboard.tsx
 import { useEffect, useState } from 'react';
 import AppSidebar from '../../layout/AppSidebar';
 import PageMeta from '../../components/common/PageMeta';

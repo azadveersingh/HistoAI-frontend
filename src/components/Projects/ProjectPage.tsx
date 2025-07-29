@@ -83,7 +83,7 @@ const ProjectPage: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="flex bg-gray-100 dark:bg-gray-900">
       {projectId && (
         <ProjectSidebar
           selectedOption={selectedOption}
@@ -92,7 +92,7 @@ const ProjectPage: React.FC = () => {
         />
       )}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex flex-col p-4 bg-white dark:bg-gray-800 shadow">
+        <div className="flex flex-col p-2 bg-white dark:bg-gray-800 shadow">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             {/* <button
               onClick={handleToggleMainSidebar}
@@ -137,7 +137,7 @@ const ProjectPage: React.FC = () => {
               />
             </div>
           </div>
-          <PageBreadCrumb pageTitle="Project Page" />
+          {/* <PageBreadCrumb pageTitle="Project Page" /> */}
         </div>
         <div className="flex-1 overflow-y-auto">
           {projectId && (
