@@ -12,36 +12,38 @@ export interface AuthUser {
 interface AuthContextType {
     user: AuthUser | null;
     loading: boolean;
-    signin: (email: string, password: string) => Promise<void>;
+    signin: (email: string, password: string) => Promise<string>; // Return role as string
     logout: () => Promise<void>;
-    role: string,
-    token: string
+    role: string;
+    token: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthUser | null>(() => {
-        // Initialize state from localStorage if available
         const storedUser = localStorage.getItem("user");
         return storedUser ? JSON.parse(storedUser) : null;
     });
     const [loading, setLoading] = useState(true);
+    const [role, setRole] = useState<string>(localStorage.getItem("role") || "");
+    const [token, setToken] = useState<string>(localStorage.getItem("token") || "");
 
-    // Fetch user on mount to check authentication status
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const token = localStorage.getItem("token");
-                if (!token) {
+                const storedToken = localStorage.getItem("token");
+                if (!storedToken) {
                     setUser(null);
+                    setRole("");
+                    setToken("");
                     localStorage.removeItem("user");
                     console.log("No token found, setting user to null");
                     return;
                 }
                 const res = await axios.get("/api/checkLogged", {
                     headers: {
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${storedToken}`,
                     },
                 });
                 if (!res.data.user) {
@@ -49,13 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     throw new Error("No user data received");
                 }
                 setUser(res.data.user);
+                setRole(res.data.user.role);
+                setToken(storedToken);
                 localStorage.setItem("user", JSON.stringify(res.data.user));
                 console.log("Fetched user:", res.data.user);
             } catch (err) {
                 console.error("Fetch user error:", err);
                 setUser(null);
+                setRole("");
+                setToken("");
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
+                localStorage.removeItem("role");
             } finally {
                 setLoading(false);
             }
@@ -64,8 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchUser();
     }, []);
 
-    // Signin function to authenticate user and set token
-    const signin = async (email: string, password: string) => {
+    const signin = async (email: string, password: string): Promise<string> => {
         try {
             const res = await axios.post("/api/login", { email, password });
             const token = res.data.access_token;
@@ -86,6 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             setUser(userRes.data.user);
+            setRole(res.data.role);
+            setToken(token);
             localStorage.setItem("user", JSON.stringify(userRes.data.user));
             console.log("Signed in user:", userRes.data.user);
 
@@ -94,9 +102,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 autoClose: 3000,
                 theme: "colored",
             });
+
+            return res.data.role; // Return the role for redirection
         } catch (err) {
             console.error("Signin error:", err);
             setUser(null);
+            setRole("");
+            setToken("");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             localStorage.removeItem("role");
@@ -109,7 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // Logout function to clear authentication data
     const logout = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -149,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signin, logout }}>
+        <AuthContext.Provider value={{ user, loading, signin, logout, role, token }}>
             {children}
         </AuthContext.Provider>
     );

@@ -43,24 +43,25 @@ import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage";
 import BookUploadManager from "./components/Books/BookUploadManager";
 import { AuthProvider } from "./context/AuthProvider";
 
-
 export default function App() {
   return (
     <AuthProvider>
       <Router>
         <ScrollToTop />
         <Routes>
-          <Route index path="/" element={<SignIn />} />
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/" element={<SignIn />} />
+          <Route path="*" element={<NotFound />} />
+
           <Route
-            path="/:projectId/chatbot"
-            element={<ChatbotPage projectId={":id"} />}
-          />
-          <Route
-            path="/:projectId/welcome"
-            element={<ToolsPage projectId={":id"} />}
-          />
-          <Route element={<AppLayout />}>
-            <Route index path="/dashboard" element={<Home />} />
+            element={
+              <ProtectedRoute allowedRoles={["admin", "project_manager", "book_manager", "user"]}>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Home />} />
             <Route
               path="/admin/users"
               element={
@@ -70,7 +71,7 @@ export default function App() {
               }
             />
             <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
-            <Route path="/collections/create" element={<CollectionCreate />} /> {/* New route */}
+            <Route path="/collections/create" element={<CollectionCreate />} />
             <Route path="/collections/create/:id" element={<CollectionCreate />} />
             <Route
               path="/dashboard/collections"
@@ -107,19 +108,36 @@ export default function App() {
             <Route path="/project/:id" element={<ProjectPage />}>
               <Route
                 path="collections/add"
-                element={<div><ProjectCollections projectId={":id"} /><AllCollections /></div>}
+                element={
+                  <div>
+                    <ProjectCollections projectId={":id"} />
+                    <AllCollections />
+                  </div>
+                }
               />
               <Route
                 path="books/add"
-                element={<div><ProjectBooks projectId={":id"} /><AllBooks /></div>}
+                element={
+                  <div>
+                    <ProjectBooks projectId={":id"} />
+                    <AllBooks />
+                  </div>
+                }
               />
               <Route
                 path="members/add"
-                element={<div><ProjectMembers projectId={":id"} /><AllMembers /></div>}
+                element={
+                  <div>
+                    <ProjectMembers projectId={":id"} />
+                    <AllMembers />
+                  </div>
+                }
               />
               <Route path="tools/welcome" element={<ToolsWelcomePage />} />
               <Route path="chatbot/welcome" element={<ToolsWelcomePage />} />
             </Route>
+            <Route path="/:projectId/chatbot" element={<ChatbotPage projectId={":id"} />} />
+            <Route path="/:projectId/welcome" element={<ToolsPage projectId={":id"} />} />
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
@@ -134,20 +152,16 @@ export default function App() {
             <Route path="/videos" element={<Videos />} />
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
-            <Route path="SearchBar" element={<SearchBar />} />
+            <Route path="/SearchBar" element={<SearchBar />} />
           </Route>
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
       <ToastContainer
         position="top-right"
         autoClose={3000}
         theme="colored"
-        style={{ zIndex: 100000 }} />
+        style={{ zIndex: 100000 }}
+      />
     </AuthProvider>
   );
 }
-
-// gaurav
