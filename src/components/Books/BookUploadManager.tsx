@@ -47,9 +47,9 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       <PageBreadcrumb pageTitle="Book Management" />
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mx-auto px-4">
         <div
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 mb-6"
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-gray-200 dark:border-gray-700 mb-2 "
           role="tablist"
           aria-label="Book Management Tabs"
         >

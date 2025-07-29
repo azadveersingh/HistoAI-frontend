@@ -71,7 +71,7 @@ export default function UserInfoCard() {
       setFirstName(updatedUser.fullName.split(" ")[0] || "");
       setLastName(updatedUser.fullName.split(" ").slice(1).join(" ") || "");
       setAvatarFile(null);
-      toast.success("Profile updated successfully!", { position: "top-right", autoClose: 3000, theme: "colored" });
+      toast.success("Profile updated successfully!", { position: "top-right", autoClose: 3000, theme: "colored", style: { zIndex: 9999 } });
       closeModal();
     } catch (err: any) {
       setError(err.message);

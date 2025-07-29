@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails } from "../../services/bookServices";
@@ -371,7 +372,7 @@ export default function AllBooks({
 
   const getVisibilityDialogMessage = () => {
     const projectCount = associatedProjects.length;
-    const collectionCount = 0;
+    const collectionCount = 0; // Assuming no collection data is fetched here
     if (projectCount === 0 && collectionCount === 0) {
       return (
         <span>Making this book private will make it not visible to anyone.</span>
@@ -384,14 +385,14 @@ export default function AllBooks({
     if (collectionCount > 0) parts.push(collectionText);
     const associationText = parts.join(" and ");
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 text-sm sm:text-base text-gray-800 dark:text-gray-100">
         <span>
           This book is associated with {associationText}. Making it private will make it unavailable to these projects. Are you sure you want to proceed?
         </span>
         {projectCount > 0 && (
           <button
             onClick={() => setShowProjectListModal(true)}
-            className="text-blue-600 dark:text-blue-400 hover:underline font-semibold text-left"
+            className="text-blue-600 dark:text-blue-400 hover:underline font-semibold text-left text-sm sm:text-base"
           >
             Click here to see projects ({projectText})
           </button>
@@ -427,10 +428,9 @@ export default function AllBooks({
       if (aChecked && !bChecked) return -1;
       if (!aChecked && bChecked) return 1;
 
-      // Sort by createdAt in descending order (newest first)
       const aDate = a.createdAt ? new Date(a.createdAt).getTime() : Number.MIN_SAFE_INTEGER;
       const bDate = b.createdAt ? new Date(b.createdAt).getTime() : Number.MIN_SAFE_INTEGER;
-      return bDate - aDate; // Descending order
+      return bDate - aDate;
     });
   }, [books, checkedBooks]);
 
@@ -450,21 +450,23 @@ export default function AllBooks({
     [sortedBooks, searchQuery]
   );
 
-  if (loading) return <div>Loading books...</div>;
-  if (error) return <div className="text-red-600 dark:text-red-400">{error}</div>;
+  if (loading) return <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">Loading books...</div>;
+  if (error) return <div className="text-sm sm:text-base text-red-600 dark:text-red-400">{error}</div>;
 
   return (
     <ComponentCard
       title={
-        <div className="flex justify-between items-center">
-          <span>All Books</span>
-          <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 sm:gap-4">
+          <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
+            All Books
+          </span>
+          <div className="flex flex-wrap gap-2">
             {isCentralRepository && role === "book_manager" && (
               <Button
                 onClick={() => handleEditBook(books.find((book) => book._id === checkedBooks[0])!)}
                 disabled={checkedBooks.length !== 1}
                 variant="primary"
-                className="text-sm py-1 px-3 bg-yellow-500 hover:bg-yellow-600 text-white"
+                className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-yellow-500 dark:bg-yellow-600 hover:bg-yellow-600 dark:hover:bg-yellow-700 text-white rounded-md"
               >
                 Edit
               </Button>
@@ -473,67 +475,69 @@ export default function AllBooks({
               onClick={isCentralRepository ? handleDeleteBooks : handleAddToProjectOrCollection}
               disabled={checkedBooks.length === 0 || (isCentralRepository && role !== "book_manager")}
               variant="primary"
-              className="text-sm py-1 px-3 bg-blue-500 hover:bg-blue-600 text-white"
+              className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-md"
             >
               {isCentralRepository ? "Delete" : collectionId ? "Add Selected to Collection" : "Add Selected to Project"}
             </Button>
           </div>
         </div>
       }
+      className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 sm:p-5 shadow-sm"
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 sm:gap-4">
         {alert && (
           <Alert
             variant={alert.variant}
             title={alert.title}
             message={alert.message}
+            className="text-sm sm:text-base"
           />
         )}
-        <Table className="border-collapse">
-          <TableHeader className="bg-gray-100 dark:bg-gray-800">
-            <TableRow>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Select
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Book Name
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Authors
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Edition
-              </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                Created At
-              </TableCell>
-              {isCentralRepository && (
-                <>
-                  <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                    Pages
-                  </TableCell>
-                  <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
-                    Visibility
-                  </TableCell>
-                </>
-              )}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredBooks.length === 0 ? (
+        <div className="max-h-[60vh] overflow-y-auto overflow-x-auto w-full">
+          <Table className="table-fixed min-w-full border-collapse text-sm sm:text-base">
+            <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <TableRow>
-                <TableCell colSpan={isCentralRepository ? 7 : 5} className="p-4 text-center text-gray-500 dark:text-gray-400">
-                  No books found
+                <TableCell isHeader className="w-16 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Select
                 </TableCell>
+                <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Book Name
+                </TableCell>
+                <TableCell isHeader className="w-1/4 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Authors
+                </TableCell>
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Edition
+                </TableCell>
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Created At
+                </TableCell>
+                {isCentralRepository && (
+                  <>
+                    <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                      Pages
+                    </TableCell>
+                    <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                      Visibility
+                    </TableCell>
+                  </>
+                )}
               </TableRow>
-            ) : (
-              filteredBooks.map((book) => (
-                <TableRow
-                  key={book._id}
-                  className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
-                >
-                  <TableCell className="p-4">
-                    <td className="p-3">
+            </TableHeader>
+            <TableBody>
+              {filteredBooks.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isCentralRepository ? 7 : 5} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                    No books found
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredBooks.map((book) => (
+                  <TableRow
+                    key={book._id}
+                    className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    <TableCell className="w-16 p-2 sm:p-4">
                       {isCentralRepository ? (
                         <Checkbox
                           id={`book-${book._id}`}
@@ -541,6 +545,8 @@ export default function AllBooks({
                           onChange={(checked) => handleCheckboxChange(book._id, checked)}
                           disabled={role !== "book_manager"}
                           label=""
+                          className="text-gray-700 dark:text-gray-200 scale-100"
+                          aria-label={`Select book ${book.bookName || "Untitled Book"}`}
                         />
                       ) : collectionId && collectionBookIds.includes(book._id) ? (
                         <div title="Already added to this collection" className="cursor-not-allowed opacity-60">
@@ -548,8 +554,10 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             label=""
+                            className="text-gray-700 dark:text-gray-200 scale-100"
+                            aria-label={`Book ${book.bookName || "Untitled Book"} already in collection`}
                           />
                         </div>
                       ) : projectId && !collectionId && projectBookIds.includes(book._id) ? (
@@ -558,8 +566,10 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             label=""
+                            className="text-gray-700 dark:text-gray-200 scale-100"
+                            aria-label={`Book ${book.bookName || "Untitled Book"} already in project`}
                           />
                         </div>
                       ) : (
@@ -568,51 +578,53 @@ export default function AllBooks({
                           checked={checkedBooks.includes(book._id)}
                           onChange={(checked) => handleCheckboxChange(book._id, checked)}
                           label=""
+                          className="text-gray-700 dark:text-gray-200 scale-100"
+                          aria-label={`Select book ${book.bookName || "Untitled Book"}`}
                         />
                       )}
-                    </td>
-                  </TableCell>
-                  <TableCell className="p-4">
-                    <a
-                      href={book.previewUrl || `${API_BASE}/Uploads/${book.fileName}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {book.bookName || "Untitled"}
-                    </a>
-                  </TableCell>
-                  <TableCell className="p-4">{getAuthorDisplay(book)}</TableCell>
-                  <TableCell className="p-4">{book.edition || "N/A"}</TableCell>
-                  <TableCell className="p-4">{formatDate(book.createdAt)}</TableCell>
-                  {isCentralRepository && (
-                    <>
-                      <TableCell className="p-4">{book.pages || "N/A"}</TableCell>
-                      <TableCell className="p-4">
-                        {role === "book_manager" ? (
-                          <label className="relative inline-flex items-center cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={book.visibility === "public"}
-                              onChange={() => handleToggleVisibility(book._id, book.visibility || "private")}
-                              className="sr-only peer"
-                            />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-600 dark:peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-100 capitalize">
-                              {book.visibility || "Private"}
-                            </span>
-                          </label>
-                        ) : (
-                          <span className="text-sm capitalize">{book.visibility || "Private"}</span>
-                        )}
-                      </TableCell>
-                    </>
-                  )}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell className="w-1/3 p-2 sm:p-4">
+                      <a
+                        href={book.previewUrl || `${API_BASE}/Uploads/${book.fileName}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                      >
+                        {book.bookName || "Untitled"}
+                      </a>
+                    </TableCell>
+                    <TableCell className="w-1/4 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{getAuthorDisplay(book)}</TableCell>
+                    <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{book.edition || "N/A"}</TableCell>
+                    <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{formatDate(book.createdAt)}</TableCell>
+                    {isCentralRepository && (
+                      <>
+                        <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{book.pages || "N/A"}</TableCell>
+                        <TableCell className="w-1/6 p-2 sm:p-4">
+                          {role === "book_manager" ? (
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={book.visibility === "public"}
+                                onChange={() => handleToggleVisibility(book._id, book.visibility || "private")}
+                                className="sr-only peer"
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-600 dark:peer-focus:ring-blue-400 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 dark:peer-checked:bg-blue-700"></div>
+                              <span className="ml-3 text-sm sm:text-base font-medium text-gray-900 dark:text-gray-100 capitalize">
+                                {book.visibility || "Private"}
+                              </span>
+                            </label>
+                          ) : (
+                            <span className="text-sm sm:text-base capitalize text-gray-800 dark:text-gray-100">{book.visibility || "Private"}</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
         <ConfirmDialog
           isOpen={showConfirmDialog}
           message={
@@ -624,6 +636,7 @@ export default function AllBooks({
           onCancel={() => setShowConfirmDialog(false)}
           confirmText={isCentralRepository ? "OK" : "Add"}
           isDestructive={isCentralRepository}
+          className="text-sm sm:text-base"
         />
         <ConfirmDialogWithInput
           isOpen={showInputDialog}
@@ -632,6 +645,7 @@ export default function AllBooks({
           onCancel={() => setShowInputDialog(false)}
           confirmText="OK"
           isDestructive={true}
+          className="text-sm sm:text-base"
         />
         <ConfirmDialog
           isOpen={showVisibilityDialog}
@@ -645,27 +659,28 @@ export default function AllBooks({
           }}
           confirmText="OK"
           isDestructive={true}
+          className="text-sm sm:text-base"
         />
         <Modal
           isOpen={showProjectListModal}
           onClose={() => setShowProjectListModal(false)}
-          isFullscreen={true}
-          showCloseButton={false}
+          isFullscreen={false}
+          showCloseButton={true}
+          className="text-sm sm:text-base"
         >
           <div
-            className="relative top-1 z-50 mx-auto w-full max-w-md rounded-lg bg-white dark:bg-gray-800 p-6 shadow-lg transition-all duration-300 ease-out transform scale-100 opacity-100 data-[state=closed]:scale-90 data-[state=closed]:opacity-0"
-            data-state={showProjectListModal ? "open" : "closed"}
+            className="w-full max-w-md mx-auto bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 shadow-lg"
             role="dialog"
             aria-modal="true"
             aria-labelledby="project-list-title"
           >
-            <h2 id="project-list-title" className="text-lg font-semibold text-gray-900 dark:text-gray-100 text-center">
+            <h2 id="project-list-title" className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 text-center">
               Associated Projects
             </h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">
+            <p className="mt-2 text-gray-600 dark:text-gray-300 text-sm sm:text-base">
               This book is associated with the following projects:
             </p>
-            <ul className="mt-4 list-disc pl-5 text-gray-900 dark:text-gray-100">
+            <ul className="mt-4 list-disc pl-5 text-gray-900 dark:text-gray-100 text-sm sm:text-base">
               {associatedProjects.length === 0 ? (
                 <li>No projects found.</li>
               ) : (
@@ -676,11 +691,11 @@ export default function AllBooks({
                 ))
               )}
             </ul>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-4 sm:mt-6 flex justify-end">
               <Button
                 variant="outline"
                 onClick={() => setShowProjectListModal(false)}
-                className="px-4 py-2 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="px-3 sm:px-4 py-1 sm:py-2 text-sm sm:text-base text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
               >
                 Close
               </Button>

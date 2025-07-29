@@ -88,8 +88,16 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  const isActive = useCallback(
-    (path: string) => location.pathname === path,
+const isActive = useCallback(
+    (path: string) => {
+      // Check for exact match or if the path is a project-related route
+      return (
+        location.pathname === path ||
+        (path === "/dashboard" && location.pathname.includes("/project/")) ||
+        (path === "/books/manage" && location.pathname.startsWith("/books/")) ||
+        (path === "/dashboard/collections" && location.pathname.startsWith("/collections/"))
+      );
+    },
     [location.pathname]
   );
 

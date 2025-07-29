@@ -67,7 +67,7 @@ export const fetchProcessingBooks = async () => {
     }
     return books.map((book: any) => ({
       ...book,
-      author2: book.author2 || "", // Default to empty string if not present
+      author2: book.author2 || "",
     }));
   } catch (error) {
     console.error("fetchProcessingBooks error:", error);
@@ -75,7 +75,6 @@ export const fetchProcessingBooks = async () => {
   }
 };
 
-// ------------------ 4. Delete Books ------------------
 // ------------------ 4. Delete Books ------------------
 export const deleteBooks = async (bookIds: string[]) => {
   try {
