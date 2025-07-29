@@ -1,13 +1,17 @@
 import { createContext, useContext, useState, useEffect } from "react";
 
 type SidebarContextType = {
-  isExpanded: boolean;
-  isMobileOpen: boolean;
+  isAppSidebarExpanded: boolean;
+  isAppSidebarMobileOpen: boolean;
+  isProjectSidebarExpanded: boolean;
+  isProjectSidebarMobileOpen: boolean;
   isHovered: boolean;
   activeItem: string | null;
   openSubmenu: string | null;
-  toggleSidebar: () => void;
-  toggleMobileSidebar: () => void;
+  toggleAppSidebar: () => void;
+  toggleAppSidebarMobile: () => void;
+  toggleProjectSidebar: () => void;
+  toggleProjectSidebarMobile: () => void;
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
@@ -26,8 +30,10 @@ export const useSidebar = () => {
 export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isAppSidebarExpanded, setIsAppSidebarExpanded] = useState(true);
+  const [isAppSidebarMobileOpen, setIsAppSidebarMobileOpen] = useState(false);
+  const [isProjectSidebarExpanded, setIsProjectSidebarExpanded] = useState(true);
+  const [isProjectSidebarMobileOpen, setIsProjectSidebarMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
@@ -38,7 +44,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
       if (!mobile) {
-        setIsMobileOpen(false);
+        setIsAppSidebarMobileOpen(false);
+        setIsProjectSidebarMobileOpen(false);
       }
     };
 
@@ -50,12 +57,20 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  const toggleSidebar = () => {
-    setIsExpanded((prev) => !prev);
+  const toggleAppSidebar = () => {
+    setIsAppSidebarExpanded((prev) => !prev);
   };
 
-  const toggleMobileSidebar = () => {
-    setIsMobileOpen((prev) => !prev);
+  const toggleAppSidebarMobile = () => {
+    setIsAppSidebarMobileOpen((prev) => !prev);
+  };
+
+  const toggleProjectSidebar = () => {
+    setIsProjectSidebarExpanded((prev) => !prev);
+  };
+
+  const toggleProjectSidebarMobile = () => {
+    setIsProjectSidebarMobileOpen((prev) => !prev);
   };
 
   const toggleSubmenu = (item: string) => {
@@ -65,13 +80,17 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   return (
     <SidebarContext.Provider
       value={{
-        isExpanded: isMobile ? false : isExpanded,
-        isMobileOpen,
+        isAppSidebarExpanded: isMobile ? false : isAppSidebarExpanded,
+        isAppSidebarMobileOpen,
+        isProjectSidebarExpanded: isMobile ? false : isProjectSidebarExpanded,
+        isProjectSidebarMobileOpen,
         isHovered,
         activeItem,
         openSubmenu,
-        toggleSidebar,
-        toggleMobileSidebar,
+        toggleAppSidebar,
+        toggleAppSidebarMobile,
+        toggleProjectSidebar,
+        toggleProjectSidebarMobile,
         setIsHovered,
         setActiveItem,
         toggleSubmenu,

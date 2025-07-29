@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useNavigate } from "react-router-dom";
 import ManageCollectionModal from "../components/ui/modal/ManageCollectionModal";
-import Logo from "../icons/graphiti.png";
 import {
   LayoutGrid,
   Users,
@@ -10,6 +9,8 @@ import {
   BookOpen,
   FolderPlus,
   ChevronDown,
+  Menu,
+  X,
 } from "lucide-react";
 import { useSidebar } from "../context/SidebarContext";
 
@@ -69,7 +70,7 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen } = useSidebar(); // Removed isHovered, setIsHovered
+  const { isAppSidebarExpanded, isAppSidebarMobileOpen, toggleAppSidebar, toggleAppSidebarMobile } = useSidebar();
   const location = useLocation();
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -88,9 +89,8 @@ const AppSidebar: React.FC = () => {
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-const isActive = useCallback(
+  const isActive = useCallback(
     (path: string) => {
-      // Check for exact match or if the path is a project-related route
       return (
         location.pathname === path ||
         (path === "/dashboard" && location.pathname.includes("/project/")) ||
@@ -161,7 +161,7 @@ const isActive = useCallback(
                 openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-600 hover:bg-gray-100"
-              } ${!isExpanded ? "lg:justify-center" : "lg:justify-start"}`} // Removed isHovered
+              } ${!isAppSidebarExpanded ? "lg:justify-center" : "lg:justify-start"}`}
             >
               <span
                 className={`w-6 h-6 ${
@@ -172,10 +172,10 @@ const isActive = useCallback(
               >
                 {nav.icon}
               </span>
-              {isExpanded && ( // Removed isHovered
+              {isAppSidebarExpanded && (
                 <span className="text-sm font-medium">{nav.name}</span>
               )}
-              {isExpanded && ( // Removed isHovered
+              {isAppSidebarExpanded && (
                 <ChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
                     openSubmenu?.type === menuType && openSubmenu?.index === index
@@ -203,13 +203,13 @@ const isActive = useCallback(
               >
                 {nav.icon}
               </span>
-              {isExpanded && ( // Removed isHovered
+              {isAppSidebarExpanded && (
                 <span className="text-sm font-medium">{nav.name}</span>
               )}
             </Link>
           ) : null}
 
-          {nav.subItems && isExpanded && ( // Removed isHovered
+          {nav.subItems && isAppSidebarExpanded && (
             <div
               ref={(el) => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
@@ -271,45 +271,29 @@ const isActive = useCallback(
 
   return (
     <>
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-md"
+        onClick={toggleAppSidebarMobile}
+      >
+        {isAppSidebarMobileOpen ? (
+          <X className="w-6 h-6" />
+        ) : (
+          <Menu className="w-6 h-6" />
+        )}
+      </button>
       <aside
         className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-3 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${isExpanded || isMobileOpen ? "w-[220px]" : "w-[60px]"}
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
+        ${isAppSidebarExpanded || isAppSidebarMobileOpen ? "w-[220px]" : "w-[60px]"}
+        ${isAppSidebarMobileOpen ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0`}
       >
-        <div
-          className={`py-4 flex ${
-            !isExpanded ? "lg:justify-center" : "justify-center"
-          }`}
-        >
-          <Link to="/">
-            {isExpanded ? (
-              <>
-                <img
-                  className="dark:hidden"
-                  alt="Logo"
-                  width="100"
-                  height="40"
-                  src={Logo}
-                />
-                <img
-                  className="hidden dark:block"
-                  src={Logo}
-                  alt="Logo"
-                  width={100}
-                  height={40}
-                />
-              </>
-            ) : (
-              <img
-                className="dark:block"
-                src={Logo}
-                alt="Logo"
-                width={100}
-                height={40}
-              />
-            )}
-          </Link>
+        <div className="py-4 flex justify-start">
+          <button
+            className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            onClick={toggleAppSidebar}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
         </div>
         <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
           <nav className="mb-6">

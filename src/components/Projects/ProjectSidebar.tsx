@@ -29,12 +29,11 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
   onSelectOption,
   projectId,
 }) => {
-  const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } =
-    useSidebar();
+  const { isProjectSidebarExpanded, isProjectSidebarMobileOpen, toggleProjectSidebar, toggleProjectSidebarMobile } = useSidebar();
   const location = useLocation();
 
   const navItems: NavItem[] = [
-     {
+    {
       icon: <ToolCase className="w-5 h-5" strokeWidth={1.5} />,
       name: "Use Tools",
       path: `/project/${projectId}/tools/welcome`,
@@ -60,12 +59,10 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
       path: `/${projectId}/chatbot`,
       openInNewTab: true,
     },
-   
   ];
 
   const isActive = useCallback(
     (path: string) => {
-    
       return (
         location.pathname === path ||
         (path === `/project/${projectId}/tools/welcome` &&
@@ -78,9 +75,8 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
   const handleNavClick = (nav: NavItem) => {
     if (!nav.openInNewTab) {
       onSelectOption(nav.name);
-      // Close mobile sidebar on navigation
-      if (isMobileOpen) {
-        toggleMobileSidebar();
+      if (isProjectSidebarMobileOpen) {
+        toggleProjectSidebarMobile();
       }
     }
     if (nav.openInNewTab) {
@@ -99,7 +95,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
                 isActive(nav.path)
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-600 hover:bg-gray-100"
-              } ${!isExpanded && !isMobileOpen ? "justify-center" : "justify-start"}`}
+              } ${!isProjectSidebarExpanded && !isProjectSidebarMobileOpen ? "justify-center" : "justify-start"}`}
             >
               <span
                 className={`w-5 h-5 ${
@@ -110,7 +106,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
               >
                 {nav.icon}
               </span>
-              {(isExpanded || isMobileOpen) && (
+              {(isProjectSidebarExpanded || isProjectSidebarMobileOpen) && (
                 <span className="text-xs font-medium">{nav.name}</span>
               )}
             </button>
@@ -122,7 +118,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
                 isActive(nav.path)
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-600 hover:bg-gray-100"
-              } ${!isExpanded && !isMobileOpen ? "justify-center" : "justify-start"}`}
+              } ${!isProjectSidebarExpanded && !isProjectSidebarMobileOpen ? "justify-center" : "justify-start"}`}
             >
               <span
                 className={`w-5 h-5 ${
@@ -133,7 +129,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
               >
                 {nav.icon}
               </span>
-              {(isExpanded || isMobileOpen) && (
+              {(isProjectSidebarExpanded || isProjectSidebarMobileOpen) && (
                 <span className="text-xs font-medium">{nav.name}</span>
               )}
             </Link>
@@ -145,37 +141,32 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Toggle Button */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 p-2 bg-blue-600 text-white rounded-md"
-        onClick={toggleMobileSidebar}
+        onClick={toggleProjectSidebarMobile}
       >
-        {isMobileOpen ? (
+        {isProjectSidebarMobileOpen ? (
           <X className="w-6 h-6" />
         ) : (
           <Menu className="w-6 h-6" />
         )}
       </button>
-
-      {/* Sidebar */}
       <aside
         className={`bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 transition-all duration-300 ease-in-out border-r border-gray-200 fixed md:static z-40
         ${
-          isMobileOpen
+          isProjectSidebarMobileOpen
             ? "block w-[240px] h-screen"
             : "hidden md:block " +
-              (isExpanded ? "w-[240px]" : "w-[60px]")
+              (isProjectSidebarExpanded ? "w-[240px]" : "w-[60px]")
         }`}
       >
         <div className="flex flex-col h-full overflow-y-auto duration-300 ease-linear no-scrollbar p-3">
-          {/* Toggle Button for Desktop */}
           <button
             className="mb-4 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
-            onClick={toggleSidebar}
+            onClick={toggleProjectSidebar}
           >
-            <Menu className="w-5 h-5" /> {/* Fixed to Menu icon */}
+            <Menu className="w-5 h-5" />
           </button>
-
           <nav className="flex-1">
             <div className="flex flex-col gap-2">{renderMenuItems()}</div>
           </nav>
