@@ -18,23 +18,18 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
-// Redirect if already authenticated
-  useEffect(() => {
-    if (!loading && user) {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const role = await signin(email, password); // Get role from signin
+      console.log("Login successful, role:", role);
+      // Redirect based on role
       if (role === "admin") {
         navigate("/admin/users", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
       }
-    }
-  }, [user, loading, navigate]);
-const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      await signin(email, password); // Use AuthProvider's signin
-      // Navigation is handled by useEffect based on user.role
     } catch (err) {
-      // Error is handled by AuthProvider via toast
       console.error("Login failed", err);
     }
   };
@@ -42,7 +37,7 @@ const handleSubmit = async (e: React.FormEvent) => {
   if (loading) {
     return <div>Loading...</div>; // Or a proper loading component
   }
-    
+
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto ">
@@ -65,7 +60,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             </p>
           </div>
           <div>
-          {/* {message && (
+            {/* {message && (
                 <div className="mb-4 p-3 text-green-800 bg-green-100 border border-green-400 rounded">
                   {message}
                 </div>
@@ -78,7 +73,7 @@ const handleSubmit = async (e: React.FormEvent) => {
               )} */}
 
             <div className="grid gap-3 sm:gap-5">
-              
+
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
                 <svg
                   width="20"
