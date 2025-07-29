@@ -4,8 +4,9 @@ import { fetchMyProjects, updateProject } from '../services/projectService';
 import { fetchAllUsers } from '../services/adminService';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import  PageBreadCrumb  from "../components/common/PageBreadCrumb"
-import {useAuth} from "../context/AuthProvider"
+import PageBreadCrumb from '../components/common/PageBreadCrumb';
+import { useAuth } from '../context/AuthProvider';
+import { useSidebar } from '../context/SidebarContext';
 
 interface Project {
   _id: string;
@@ -31,12 +32,33 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
-
-  const {token} = useAuth();
+  const { token } = useAuth();
+  const { 
+    toggleAppSidebar, 
+    toggleAppSidebarMobile, 
+    toggleProjectSidebar, 
+    toggleProjectSidebarMobile, 
+    isAppSidebarExpanded, 
+    isAppSidebarMobileOpen,
+    isProjectSidebarExpanded,
+    isProjectSidebarMobileOpen,
+    isFirstProjectSelection,
+    setFirstProjectSelection
+  } = useSidebar();
 
   const getCurrentUserRole = (): string => {
     return localStorage.getItem('role') || 'guest';
   };
+
+  // Close ProjectSidebar when on the project list page
+  useEffect(() => {
+    if (isProjectSidebarExpanded) {
+      toggleProjectSidebar();
+    }
+    if (isProjectSidebarMobileOpen) {
+      toggleProjectSidebarMobile();
+    }
+  }, [isProjectSidebarExpanded, isProjectSidebarMobileOpen, toggleProjectSidebar, toggleProjectSidebarMobile]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -94,6 +116,24 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
   const handleProjectSelect = (id: string) => {
     onProjectSelect(id);
     navigate(`/project/${id}`);
+    if (isFirstProjectSelection) {
+      // Close AppSidebar (desktop and mobile)
+      if (isAppSidebarExpanded) {
+        toggleAppSidebar();
+      }
+      if (isAppSidebarMobileOpen) {
+        toggleAppSidebarMobile();
+      }
+      // Open ProjectSidebar (desktop and mobile)
+      if (!isProjectSidebarExpanded) {
+        toggleProjectSidebar();
+      }
+      if (!isProjectSidebarMobileOpen) {
+        toggleProjectSidebarMobile();
+      }
+      // Mark first project selection as complete
+      setFirstProjectSelection(false);
+    }
   };
 
   const handleUpdateName = async (id: string, newName: string) => {
@@ -111,7 +151,8 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+      <PageBreadCrumb pageTitle="Project List" />
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
           All Created Projects
         </h2>
@@ -136,7 +177,6 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
           )}
         </div>
       </div>
-      <PageBreadCrumb pageTitle="Project List" />
       <ProjectGrid 
         projects={filteredProjects} 
         onCardClick={handleProjectSelect} 
