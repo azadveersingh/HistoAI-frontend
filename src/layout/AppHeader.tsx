@@ -37,7 +37,7 @@ const AppHeader: React.FC = () => {
               className="dark:hidden"
               src={Logo}
               alt="Logo"
-              width="100"
+              width="80"
               height="40"
             />
             <img
