@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { fetchCollectionById, updateCollection } from "../../services/collectionServices";
-import { fetchAllBooks } from "../../services/bookServices";
+import { fetchAllBooks, fetchBookFile, fetchBookPreviewImage } from "../../services/bookServices";
 import ComponentCard from "../../components/common/ComponentCard";
 import Checkbox from "../../components/form/input/Checkbox";
 import Button from "../../components/ui/button/Button";
@@ -23,6 +23,9 @@ interface Book {
   edition?: string;
   fileName?: string;
   frontPageImagePath?: string;
+  previewUrl?: string; // Added for PDF URL
+  pdfUrl?: string; // Added for PDF blob URL
+  previewImageUrl?: string; // Added for preview image blob URL
   createdAt?: string;
   pages?: number;
 }
@@ -69,12 +72,34 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
           bookIds: Array.isArray(collectionData.bookIds) ? collectionData.bookIds : [],
         };
 
+        // Fetch preview images and PDF blob URLs
+        const booksWithPreviewsAndPdfs = await Promise.all(
+          allBooks.map(async (book: Book) => {
+            let previewImageUrl, pdfUrl;
+            if (book.frontPageImagePath) {
+              try {
+                previewImageUrl = await fetchBookPreviewImage(book.frontPageImagePath);
+              } catch (err) {
+                console.error(`Failed to fetch preview for book ${book._id}:`, err);
+              }
+            }
+            if (book.previewUrl) {
+              try {
+                pdfUrl = await fetchBookFile(book.previewUrl);
+              } catch (err) {
+                console.error(`Failed to fetch PDF for book ${book._id}:`, err);
+              }
+            }
+            return { ...book, previewImageUrl, pdfUrl };
+          })
+        );
+
         setCollection(normalizedCollection);
-        setBooks(allBooks);
+        setBooks(booksWithPreviewsAndPdfs);
         setCheckedBooks(normalizedCollection.bookIds);
         setInitialCheckedBooks(normalizedCollection.bookIds);
       } catch (err: any) {
-        console.error(err);
+        console.error("Error loading collection books:", err);
         setError("Failed to load collection books");
       } finally {
         setLoading(false);
@@ -214,25 +239,28 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
           />
         )}
 
-        <Table className="border-collapse">
-          <TableHeader className="bg-gray-100 dark:bg-gray-800">
+        <Table className="border-collapse table-fixed min-w-full">
+          <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
             <TableRow>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-16 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Select
               </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                Preview
+              </TableCell>
+              <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Book Name
               </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-1/4 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Author
               </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Edition
               </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Pages
               </TableCell>
-              <TableCell isHeader className="p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+              <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                 Created At
               </TableCell>
             </TableRow>
@@ -240,7 +268,7 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
           <TableBody>
             {filteredBooks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="p-4 text-center text-gray-500 dark:text-gray-400">
+                <TableCell colSpan={7} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                   No books found in this collection{searchQuery ? " matching your search" : ""}.
                 </TableCell>
               </TableRow>
@@ -250,36 +278,64 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
                   key={book._id}
                   className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900"
                 >
-                  <TableCell className="p-4">
+                  <TableCell className="w-16 p-2 sm:p-4">
                     <Checkbox
                       id={`book-${book._id}`}
                       checked={checkedBooks.includes(book._id)}
                       onChange={(checked) => handleCheckboxChange(book._id, checked)}
                       label=""
+                      className="text-gray-700 dark:text-gray-200 scale-100"
                       aria-label={`Remove book ${book.bookName || "Untitled"} from collection`}
                     />
                   </TableCell>
-                  <TableCell className="p-4">
-                    <a
-                      href={`${API_BASE}/Uploads/${book.fileName}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      {book.bookName || "Untitled"}
-                    </a>
+                  <TableCell className="w-1/6 p-2 sm:p-4">
+                    {book.previewImageUrl ? (
+                      <img
+                        src={book.previewImageUrl}
+                        alt={`Preview of ${book.bookName || "Untitled"}`}
+                        className="w-16 h-16 object-cover rounded"
+                        onError={(e) => console.error(`Failed to load preview for ${book.bookName}:`, e)}
+                      />
+                    ) : (
+                      <span className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">No preview</span>
+                    )}
                   </TableCell>
-                  <TableCell className="p-4">{book.author || "Unknown"}</TableCell>
-                  <TableCell className="p-4">{book.edition || "N/A"}</TableCell>
-                  <TableCell className="p-4">
+                  <TableCell className="w-1/3 p-2 sm:p-4">
+                    {book.pdfUrl ? (
+                      <a
+                        href={book.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                      >
+                        {book.bookName || "Untitled"}
+                      </a>
+                    ) : (
+                      <span
+                        className="text-gray-500 dark:text-gray-400 text-sm sm:text-base"
+                        title="PDF not available"
+                      >
+                        {book.bookName || "Untitled"}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="w-1/4 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">
+                    {book.author || "Unknown"}
+                  </TableCell>
+                  <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">
+                    {book.edition || "N/A"}
+                  </TableCell>
+                  <TableCell className="w-1/6 p-2 sm:p-4">
                     <button
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
+                      className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
                       onClick={() => openBookModal(book)}
                     >
                       {book.pages || "N/A"}
                     </button>
                   </TableCell>
-                  <TableCell className="p-4">{formatDate(book.createdAt)}</TableCell>
+                  <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">
+                    {formatDate(book.createdAt)}
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -290,28 +346,34 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
           isOpen={showModal}
           onClose={() => setShowModal(false)}
           title={`Details for "${selectedBook?.bookName || "Book"}"`}
+          isFullscreen={false}
+          showCloseButton={true}
+          className="text-sm sm:text-base"
         >
-          <div className="space-y-2 p-4">
+          <div className="space-y-2 p-4 sm:p-6 text-gray-800 dark:text-gray-100">
             {selectedBook ? (
-              <div className="text-gray-800 dark:text-gray-100">
+              <>
                 <p><strong>Name:</strong> {selectedBook.bookName || "Untitled"}</p>
                 <p><strong>Author:</strong> {selectedBook.author || "Unknown"}</p>
                 <p><strong>Edition:</strong> {selectedBook.edition || "N/A"}</p>
                 <p><strong>Pages:</strong> {selectedBook.pages || "N/A"}</p>
                 <p><strong>Created At:</strong> {formatDate(selectedBook.createdAt)}</p>
-                {selectedBook.frontPageImagePath && (
+                {selectedBook.previewImageUrl ? (
                   <img
-                    src={`${API_BASE}/Uploads/${selectedBook.frontPageImagePath}`}
-                    alt={selectedBook.bookName || "Book Icon"}
+                    src={selectedBook.previewImageUrl}
+                    alt={`Preview of ${selectedBook.bookName || "Untitled"}`}
                     className="w-24 h-24 object-cover rounded mt-2"
                     onError={(e) => {
+                      console.error(`Failed to load preview for ${selectedBook.bookName}:`, e);
                       e.currentTarget.src = "https://via.placeholder.com/96";
                     }}
                   />
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 mt-2">No preview image available</p>
                 )}
-              </div>
+              </>
             ) : (
-              <div className="text-gray-500 dark:text-gray-400">No book details available.</div>
+              <p className="text-gray-500 dark:text-gray-400">No book details available.</p>
             )}
           </div>
         </Modal>
@@ -325,6 +387,7 @@ export default function CollectionBooks({ collectionId, searchQuery, onBooksRemo
           onCancel={() => setShowConfirmDialog(false)}
           confirmText="Remove"
           isDestructive={true}
+          className="text-sm sm:text-base"
         />
       </div>
     </ComponentCard>

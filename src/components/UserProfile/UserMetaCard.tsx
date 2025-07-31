@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
@@ -6,6 +7,8 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { getProfile, updateProfileWithImage } from "../../services/profileServices";
 import { toast } from "react-toastify";
+import axios from "axios";
+import { api as API_BASE } from "../../api/api";
 
 interface User {
   fullName: string;
@@ -15,25 +18,64 @@ interface User {
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const [user, setUser] = useState<User | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
 
-  // Fetch profile data on mount
+  // Fetch profile data and avatar on mount
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchProfileAndAvatar = async () => {
       try {
         const profile = await getProfile();
-        console.log("Profile fetched:", profile); // Debug log
+        console.log("Profile fetched:", profile);
         setUser(profile);
+
+        if (profile.avatar) {
+          console.log("Fetching avatar with path:", profile.avatar);
+          const token = localStorage.getItem("token");
+          if (!token) {
+            console.error("No token found in localStorage");
+            setAvatarError(true);
+            return;
+          }
+
+          try {
+            const response = await axios.get(`${API_BASE}/avatars/${profile.avatar}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              responseType: "blob", // Fetch as a blob for image rendering
+            });
+            const blobUrl = URL.createObjectURL(response.data);
+            console.log("Avatar blob URL created:", blobUrl);
+            setAvatarUrl(blobUrl);
+          } catch (err: any) {
+            console.error("Avatar fetch error:", err);
+            setAvatarError(true);
+            toast.error("Failed to load avatar", {
+              position: "top-right",
+              autoClose: 3000,
+              theme: "colored",
+            });
+          }
+        }
       } catch (err: any) {
-        console.error("Profile fetch error:", err.message); // Debug log
+        console.error("Profile fetch error:", err.message);
         setError(err.message);
         toast.error(err.message, { position: "top-right", autoClose: 3000, theme: "colored" });
       }
     };
-    fetchProfile();
+    fetchProfileAndAvatar();
+
+    // Cleanup blob URL to prevent memory leaks
+    return () => {
+      if (avatarUrl) {
+        URL.revokeObjectURL(avatarUrl);
+        console.log("Blob URL revoked:", avatarUrl);
+      }
+    };
   }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,14 +109,35 @@ export default function UserMetaCard() {
       setLoading(true);
       setError(null);
       const updatedUser = await updateProfileWithImage(user?.fullName || "", avatarFile);
-      console.log("Profile updated:", updatedUser); // Debug log
+      console.log("Profile updated:", updatedUser);
       setUser(updatedUser);
+      if (updatedUser.avatar) {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          console.error("No token found in localStorage");
+          setAvatarError(true);
+          return;
+        }
+        const response = await axios.get(`${API_BASE}/avatars/${updatedUser.avatar}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        });
+        const blobUrl = URL.createObjectURL(response.data);
+        console.log("New avatar blob URL created:", blobUrl);
+        setAvatarUrl(blobUrl);
+      }
       setAvatarFile(null);
       setAvatarError(false);
-      toast.success("Profile updated successfully!", { position: "top-right", autoClose: 3000, theme: "colored" });
+      toast.success("Profile updated successfully!", {
+        position: "top-right",
+        autoClose: 3000,
+        theme: "colored",
+      });
       closeModal();
     } catch (err: any) {
-      console.error("Profile update error:", err.message); // Debug log
+      console.error("Profile update error:", err.message);
       setError(err.message);
       toast.error(err.message, { position: "top-right", autoClose: 3000, theme: "colored" });
     } finally {
@@ -112,13 +175,13 @@ export default function UserMetaCard() {
       <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-col items-center w-full gap-6 xl:flex-row">
           <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800 flex items-center justify-center">
-            {user.avatar && !avatarError ? (
+            {user.avatar && avatarUrl && !avatarError ? (
               <img
-                src={user.avatar}
+                src={avatarUrl}
                 alt="user"
                 className="w-full h-full object-cover"
                 onError={() => {
-                  console.error("Failed to load avatar:", user.avatar); // Debug log
+                  console.error("Failed to load avatar:", avatarUrl);
                   setAvatarError(true);
                 }}
               />

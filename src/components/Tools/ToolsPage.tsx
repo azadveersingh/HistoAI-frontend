@@ -27,34 +27,34 @@ const TOOL_BUTTONS: Array<{
   ringColor: string;
   route: string;
 }> = [
-    {
-      tool: "data-extraction",
-      label: "Data Extraction",
-      icon: <FiDatabase className="w-4 h-4" />,
-      bgColor: "bg-blue-600",
-      hoverBgColor: "hover:bg-blue-700",
-      ringColor: "ring-blue-500",
-      route: "tools/welcome",
-    },
-    {
-      tool: "chatbot",
-      label: "Chatbot",
-      icon: <FiMessageSquare className="w-4 h-4" />,
-      bgColor: "bg-green-600",
-      hoverBgColor: "hover:bg-green-700",
-      ringColor: "ring-green-500",
-      route: "chatbot",
-    },
-    {
-      tool: "knowledge-graph",
-      label: "Knowledge Graph",
-      icon: <FiGitBranch className="w-4 h-4" />,
-      bgColor: "bg-purple-600",
-      hoverBgColor: "hover:bg-purple-700",
-      ringColor: "ring-purple-500",
-      route: "tools/welcome",
-    },
-  ];
+  {
+    tool: "data-extraction",
+    label: "Data Extraction",
+    icon: <FiDatabase className="w-4 h-4" />,
+    bgColor: "bg-blue-600",
+    hoverBgColor: "hover:bg-blue-700",
+    ringColor: "ring-blue-500",
+    route: "tools/welcome",
+  },
+  {
+    tool: "chatbot",
+    label: "Chatbot",
+    icon: <FiMessageSquare className="w-4 h-4" />,
+    bgColor: "bg-green-600",
+    hoverBgColor: "hover:bg-green-700",
+    ringColor: "ring-green-500",
+    route: "chatbot",
+  },
+  {
+    tool: "knowledge-graph",
+    label: "Knowledge Graph",
+    icon: <FiGitBranch className="w-4 h-4" />,
+    bgColor: "bg-purple-600",
+    hoverBgColor: "hover:bg-purple-700",
+    ringColor: "ring-purple-500",
+    route: "tools/welcome",
+  },
+];
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -119,16 +119,12 @@ export default function ToolsPage({
     <div className="h-[79vh] w-full flex flex-col transition-colors duration-300 bg-gray-0 dark:bg-gray-0 overflow-hidden">
       <ComponentCard
         title="Select Project Resources to Use Tools"
-        className="flex-1  overflow-hidden m-4 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700"
+        className="flex-1 overflow-hidden m-4 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700"
       >
-
         <div className="space-y-6">
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div className="min-w-0">
-
-
-            </div>
+            <div className="min-w-0"></div>
 
             {/* Tool Buttons */}
             <div className="flex flex-col gap-3 lg:min-w-[300px]">
@@ -180,7 +176,6 @@ export default function ToolsPage({
                   {selectedCollections.length !== 1 && "s"} selected
                 </span>
               </div>
-
             </div>
           </div>
 
@@ -204,20 +199,24 @@ export default function ToolsPage({
           {/* Resource Selection */}
           {!loading && !error && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ProjectCollections
-                projectId={projectId}
-                searchQuery={searchQuery}
-                isToolsPage
-                selectedCollections={selectedCollections}
-                onCollectionSelectionChange={toggleCollection}
-              />
-              <ProjectBooks
-                projectId={projectId}
-                searchQuery={searchQuery}
-                isToolsPage
-                selectedBooks={selectedBooks}
-                onBookSelectionChange={toggleBook}
-              />
+              <div className="max-h-[50vh] overflow-y-auto">
+                <ProjectCollections
+                  projectId={projectId}
+                  searchQuery={searchQuery}
+                  isToolsPage
+                  selectedCollections={selectedCollections}
+                  onCollectionSelectionChange={toggleCollection}
+                />
+              </div>
+              <div className="max-h-[50vh] overflow-y-auto">
+                <ProjectBooks
+                  projectId={projectId}
+                  searchQuery={searchQuery}
+                  isToolsPage
+                  selectedBooks={selectedBooks}
+                  onBookSelectionChange={toggleBook}
+                />
+              </div>
             </div>
           )}
         </div>

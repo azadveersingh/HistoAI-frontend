@@ -1,7 +1,6 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails } from "../../services/bookServices";
+import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails, fetchBookPreviewImage, fetchBookFile } from "../../services/bookServices";
 import { fetchCollectionById, updateCollection } from "../../services/collectionServices";
 import Checkbox from "../../components/form/input/Checkbox";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -22,6 +21,9 @@ interface Book {
   edition?: string;
   fileName?: string;
   frontPageImagePath?: string;
+  previewUrl?: string;
+  previewImageUrl?: string;
+  pdfUrl?: string; // Added for PDF blob URL
   createdAt?: string;
   pages?: number;
   visibility?: "public" | "private";
@@ -92,7 +94,30 @@ export default function AllBooks({
         if (allBooks.length !== validBooks.length) {
           console.warn("Filtered out invalid books:", allBooks.filter((book: Book) => !validBooks.includes(book)));
         }
-        setBooks(validBooks);
+
+        // Fetch preview images and PDF blob URLs
+        const booksWithPreviewsAndPdfs = await Promise.all(
+          validBooks.map(async (book) => {
+            let previewImageUrl, pdfUrl;
+            if (book.frontPageImagePath) {
+              try {
+                previewImageUrl = await fetchBookPreviewImage(book.frontPageImagePath);
+              } catch (err) {
+                console.error(`Failed to fetch preview for book ${book._id}:`, err);
+              }
+            }
+            if (book.previewUrl) {
+              try {
+                pdfUrl = await fetchBookFile(book.previewUrl);
+              } catch (err) {
+                console.error(`Failed to fetch PDF for book ${book._id}:`, err);
+              }
+            }
+            return { ...book, previewImageUrl, pdfUrl };
+          })
+        );
+
+        setBooks(booksWithPreviewsAndPdfs);
         setProjectBookIds(projectBooks.map((book: Book) => book._id));
         if (collectionData && Array.isArray(collectionData.bookIds)) {
           setCollectionBookIds(collectionData.bookIds);
@@ -500,6 +525,9 @@ export default function AllBooks({
                 <TableCell isHeader className="w-16 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Select
                 </TableCell>
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                  Preview
+                </TableCell>
                 <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Book Name
                 </TableCell>
@@ -527,7 +555,7 @@ export default function AllBooks({
             <TableBody>
               {filteredBooks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isCentralRepository ? 7 : 5} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                  <TableCell colSpan={isCentralRepository ? 8 : 6} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                     No books found
                   </TableCell>
                 </TableRow>
@@ -583,15 +611,36 @@ export default function AllBooks({
                         />
                       )}
                     </TableCell>
+                    <TableCell className="w-1/6 p-2 sm:p-4">
+                      {book.previewImageUrl ? (
+                        <img
+                          src={book.previewImageUrl}
+                          alt={`Preview of ${book.bookName || "Untitled"}`}
+                          className="w-16 h-16 object-cover rounded"
+                          onError={(e) => console.error(`Failed to load preview for ${book.bookName}:`, e)}
+                        />
+                      ) : (
+                        <span className="text-gray-500 dark:text-gray-400 text-sm sm:text-base">No preview</span>
+                      )}
+                    </TableCell>
                     <TableCell className="w-1/3 p-2 sm:p-4">
-                      <a
-                        href={book.previewUrl || `${API_BASE}/Uploads/${book.fileName}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
-                      >
-                        {book.bookName || "Untitled"}
-                      </a>
+                      {book.pdfUrl ? (
+                        <a
+                          href={book.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                        >
+                          {book.bookName || "Untitled"}
+                        </a>
+                      ) : (
+                        <span
+                          className="text-gray-500 dark:text-gray-400 text-sm sm:text-base"
+                          title="PDF not available"
+                        >
+                          {book.bookName || "Untitled"}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="w-1/4 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{getAuthorDisplay(book)}</TableCell>
                     <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{book.edition || "N/A"}</TableCell>

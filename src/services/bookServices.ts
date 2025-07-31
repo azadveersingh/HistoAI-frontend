@@ -27,7 +27,7 @@ export const uploadBooks = async (formData: FormData) => {
     return response.data;
   } catch (error: any) {
     console.error("uploadBooks: Error:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || "Failed to upload books");
   }
 };
 
@@ -47,9 +47,9 @@ export const fetchAllBooks = async () => {
       ...book,
       author2: book.author2 || "", // Default to empty string if not present
     }));
-  } catch (error) {
-    console.error("fetchAllBooks error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("fetchAllBooks error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to fetch books");
   }
 };
 
@@ -69,9 +69,9 @@ export const fetchProcessingBooks = async () => {
       ...book,
       author2: book.author2 || "",
     }));
-  } catch (error) {
-    console.error("fetchProcessingBooks error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("fetchProcessingBooks error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to fetch processing books");
   }
 };
 
@@ -89,7 +89,7 @@ export const deleteBooks = async (bookIds: string[]) => {
     return response.data;
   } catch (error: any) {
     console.error("deleteBooks: Error:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || "Failed to delete books");
   }
 };
 
@@ -110,7 +110,7 @@ export const updateBookVisibility = async (
     return response.data;
   } catch (error: any) {
     console.error("updateBookVisibility: Error:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || "Failed to update book visibility");
   }
 };
 
@@ -128,7 +128,7 @@ export const completeOcrProcess = async (bookId: string) => {
     return response.data;
   } catch (error: any) {
     console.error("completeOcrProcess: Error:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || "Failed to complete OCR process");
   }
 };
 
@@ -142,9 +142,9 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
     );
     console.log("addBooksToProject: Response received:", response.data);
     return response.data;
-  } catch (error) {
-    console.error("addBooksToProject error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("addBooksToProject error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to add books to project");
   }
 };
 
@@ -158,9 +158,9 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
     );
     console.log("removeBooksFromProject: Response received:", response.data);
     return response.data;
-  } catch (error) {
-    console.error("removeBooksFromProject error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("removeBooksFromProject error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to remove books from project");
   }
 };
 
@@ -180,9 +180,9 @@ export const fetchProjectBooks = async (projectId: string) => {
       ...book,
       author2: book.author2 || "", // Default to empty string if not present
     }));
-  } catch (error) {
-    console.error("fetchProjectBooks error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("fetchProjectBooks error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to fetch project books");
   }
 };
 
@@ -199,14 +199,13 @@ export const fetchProjectsForBook = async (bookId: string) => {
       return [];
     }
     return projects;
-  } catch (error) {
-    console.error("fetchProjectsForBook error:", error);
-    throw error;
+  } catch (error: any) {
+    console.error("fetchProjectsForBook error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error || "Failed to fetch projects for book");
   }
 };
 
-
-// ------------------ 2. Update Book Details ------------------
+// ------------------ 11. Update Book Details ------------------
 export const updateBookDetails = async (
   bookId: string,
   bookData: {
@@ -232,6 +231,46 @@ export const updateBookDetails = async (
     return response.data;
   } catch (error: any) {
     console.error("updateBookDetails: Error:", error.response?.data || error.message);
-    throw error;
+    throw new Error(error.response?.data?.error || "Failed to update book details");
+  }
+};
+
+// ------------------ Fetch Book File (PDF) ------------------
+export const fetchBookFile = async (filePath: string): Promise<string> => {
+  try {
+    console.log(`fetchBookFile: Fetching book file: ${filePath}`);
+    const response = await axios.get(`${API_BASE}/Uploads/book/${filePath}`, {
+      headers: getAuthHeaders(),
+      responseType: "blob",
+    });
+    const blobUrl = URL.createObjectURL(response.data);
+    console.log(`fetchBookFile: Blob URL created: ${blobUrl}`);
+    return blobUrl;
+  } catch (error: any) {
+    console.error(
+      "fetchBookFile: Error:",
+      error.response ? { status: error.response.status, data: error.response.data } : error.message
+    );
+    throw new Error(error.response?.data?.error || "Failed to fetch book file");
+  }
+};
+
+// ------------------ Fetch Book Preview Image ------------------
+export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise<string> => {
+  try {
+    console.log(`fetchBookPreviewImage: Fetching preview image: ${frontPageImagePath}`);
+    const response = await axios.get(`${API_BASE}/Uploads/book/${frontPageImagePath}`, {
+      headers: getAuthHeaders(),
+      responseType: "blob",
+    });
+    const blobUrl = URL.createObjectURL(response.data);
+    console.log(`fetchBookPreviewImage: Blob URL created: ${blobUrl}`);
+    return blobUrl;
+  } catch (error: any) {
+    console.error(
+      "fetchBookPreviewImage: Error:",
+      error.response ? { status: error.response.status, data: error.response.data } : error.message
+    );
+    throw new Error(error.response?.data?.error || "Failed to fetch preview image");
   }
 };

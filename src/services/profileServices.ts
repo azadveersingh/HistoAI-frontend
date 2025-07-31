@@ -1,7 +1,7 @@
+
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
 
-// Define the User type based on the API response structure
 interface User {
   fullName: string;
   email: string;
@@ -10,13 +10,11 @@ interface User {
   avatar: string | null;
 }
 
-// Define the type for profile update data
 interface UpdateProfileData {
   fullName?: string;
   avatar?: string;
 }
 
-// Fetch user profile
 export const getProfile = async (): Promise<User> => {
   try {
     const response = await axios.get(`${API_BASE}/user/api/profile`, {
@@ -31,7 +29,6 @@ export const getProfile = async (): Promise<User> => {
   }
 };
 
-// Update user profile with text data
 export const updateProfile = async (data: UpdateProfileData): Promise<User> => {
   try {
     const response = await axios.put(`${API_BASE}/user/api/profile`, data, {
@@ -46,7 +43,6 @@ export const updateProfile = async (data: UpdateProfileData): Promise<User> => {
   }
 };
 
-// Update user profile with image
 export const updateProfileWithImage = async (fullName: string, file: File | null): Promise<User> => {
   try {
     const formData = new FormData();
