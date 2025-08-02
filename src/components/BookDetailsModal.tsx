@@ -154,7 +154,7 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
         uploadData.append("author2", data.author2.toUpperCase());
         uploadData.append("edition", data.edition.toUpperCase());
 
-        console.log(`FormData for ${file.name}:`);
+        // console.log(`FormData for ${file.name}:`);
         for (let [key, value] of uploadData.entries()) {
           console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
         }

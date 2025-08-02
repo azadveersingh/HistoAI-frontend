@@ -74,10 +74,10 @@ export default function CollectionDetails() {
           fetchMyProjects(),
         ]);
 
-        console.log("Fetched collection data:", collectionData);
-        console.log("Fetched all books:", allBooks);
-        console.log("Fetched all users:", users);
-        console.log("Fetched all projects:", projects);
+        // console.log("Fetched collection data:", collectionData);
+        // console.log("Fetched all books:", allBooks);
+        // console.log("Fetched all users:", users);
+        // console.log("Fetched all projects:", projects);
 
         const userMap = new Map(users.map((u: User) => [u._id, u.fullName]));
         const projectMap = new Map(projects.map((p: Project) => [p._id, p.name]));

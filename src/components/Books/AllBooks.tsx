@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails, fetchBookPreviewImage, fetchBookFile } from "../../services/bookServices";
+import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails, fetchBookPreviewImage, fetchBookFile, fetchOcrText } from "../../services/bookServices";
 import { fetchCollectionById, updateCollection } from "../../services/collectionServices";
 import Checkbox from "../../components/form/input/Checkbox";
 import ComponentCard from "../../components/common/ComponentCard";
 import Button from "../../components/ui/button/Button";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "../../components/ui/table";
 import Alert from "../../components/ui/alert/Alert";
-import { api as API_BASE } from "../../api/api";
 import ConfirmDialog from "../../components/ui/confirmation/ConfirmDialog";
 import ConfirmDialogWithInput from "../../components/ui/confirmation/ConfirmDialogWithInput";
 import { Modal } from "../../components/ui/modal/index";
@@ -23,7 +22,7 @@ interface Book {
   frontPageImagePath?: string;
   previewUrl?: string;
   previewImageUrl?: string;
-  pdfUrl?: string; // Added for PDF blob URL
+  pdfUrl?: string;
   createdAt?: string;
   pages?: number;
   visibility?: "public" | "private";
@@ -84,9 +83,9 @@ export default function AllBooks({
 
         const [allBooks, projectBooks, collectionData] = await Promise.all(promises);
 
-        console.log("Fetched all books:", allBooks);
-        console.log("Fetched project books:", projectBooks);
-        console.log("Fetched collection data:", collectionData);
+        // console.log("Fetched all books:", allBooks);
+        // console.log("Fetched project books:", projectBooks);
+        // console.log("Fetched collection data:", collectionData);
 
         const validBooks = allBooks.filter(
           (book: Book) => book && book._id && typeof book._id === "string"
@@ -365,6 +364,31 @@ export default function AllBooks({
     }
   };
 
+  const handleDownloadOcrText = async (bookId: string, bookName: string) => {
+    try {
+      const blobUrl = await fetchOcrText(bookId);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `${bookName || "Untitled"}_OCR.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      setAlert({
+        variant: "success",
+        title: "OCR Text Downloaded",
+        message: `OCR text file for "${bookName || "Untitled"}" downloaded successfully.`,
+      });
+    } catch (err: any) {
+      console.error("Error downloading OCR text:", err);
+      setAlert({
+        variant: "error",
+        title: "Error",
+        message: err.message || "Failed to download OCR text file.",
+      });
+    }
+  };
+
   const handleConfirmVisibilityChange = async () => {
     if (!visibilityBookId || !visibilityTarget) return;
 
@@ -528,10 +552,10 @@ export default function AllBooks({
                 <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Preview
                 </TableCell>
-                <TableCell isHeader className="w-1/3 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Book Name
                 </TableCell>
-                <TableCell isHeader className="w-1/4 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                   Authors
                 </TableCell>
                 <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
@@ -548,6 +572,9 @@ export default function AllBooks({
                     <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
                       Visibility
                     </TableCell>
+                    <TableCell isHeader className="w-1/6 p-2 sm:p-4 text-left font-semibold text-gray-700 dark:text-gray-200">
+                      OCR Text
+                    </TableCell>
                   </>
                 )}
               </TableRow>
@@ -555,7 +582,7 @@ export default function AllBooks({
             <TableBody>
               {filteredBooks.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isCentralRepository ? 8 : 6} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
+                  <TableCell colSpan={isCentralRepository ? 9 : 6} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
                     No books found
                   </TableCell>
                 </TableRow>
@@ -665,6 +692,15 @@ export default function AllBooks({
                           ) : (
                             <span className="text-sm sm:text-base capitalize text-gray-800 dark:text-gray-100">{book.visibility || "Private"}</span>
                           )}
+                        </TableCell>
+                        <TableCell className="w-1/6 p-2 sm:p-4">
+                          <Button
+                            variant="primary"
+                            onClick={() => handleDownloadOcrText(book._id, book.bookName)}
+                            className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white rounded-md"
+                          >
+                            Download OCR
+                          </Button>
                         </TableCell>
                       </>
                     )}

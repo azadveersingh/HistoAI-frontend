@@ -274,3 +274,23 @@ export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise
     throw new Error(error.response?.data?.error || "Failed to fetch preview image");
   }
 };
+
+// ------------------ Fetch OCR Text File ------------------
+export const fetchOcrText = async (bookId: string): Promise<string> => {
+  try {
+    console.log(`fetchOcrText: Fetching OCR text for book: ${bookId}`);
+    const response = await axios.get(`${API_BASE}/api/books/${bookId}/ocr/text`, {
+      headers: getAuthHeaders(),
+      responseType: "blob",
+    });
+    const blobUrl = URL.createObjectURL(response.data);
+    console.log(`fetchOcrText: Blob URL created: ${blobUrl}`);
+    return blobUrl;
+  } catch (error: any) {
+    console.error(
+      "fetchOcrText: Error:",
+      error.response ? { status: error.response.status, data: error.response.data } : error.message
+    );
+    throw new Error(error.response?.data?.error || "Failed to fetch OCR text file");
+  }
+};

@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setRole(res.data.user.role);
                 setToken(storedToken);
                 localStorage.setItem("user", JSON.stringify(res.data.user));
-                console.log("Fetched user:", res.data.user);
+                // console.log("Fetched user:", res.data.user);
             } catch (err) {
                 console.error("Fetch user error:", err);
                 setUser(null);

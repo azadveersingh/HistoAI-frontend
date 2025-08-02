@@ -26,11 +26,11 @@ export default function UserDropdown() {
     const fetchProfileAndAvatar = async () => {
       try {
         const profile = await getProfile();
-        console.log("Profile fetched:", profile);
+        // console.log("Profile fetched:", profile);
         setUser(profile);
 
         if (profile.avatar) {
-          console.log("Fetching avatar with path:", profile.avatar);
+          // console.log("Fetching avatar with path:", profile.avatar);
           const token = localStorage.getItem("token");
           if (!token) {
             console.error("No token found in localStorage");
@@ -46,7 +46,7 @@ export default function UserDropdown() {
               responseType: "blob",
             });
             const blobUrl = URL.createObjectURL(response.data);
-            console.log("Avatar blob URL created:", blobUrl);
+            // console.log("Avatar blob URL created:", blobUrl);
             setAvatarUrl(blobUrl);
           } catch (err: any) {
             console.error("Avatar fetch error:", err);

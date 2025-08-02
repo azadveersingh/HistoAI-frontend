@@ -13,8 +13,8 @@ export default function SignInForm() {
   const navigate = useNavigate();
 
   const { user, loading, signin, role } = useAuth(); // Use AuthProvider's signin
-  const [email, setEmail] = useState("gaurav.soni@aicentre.org");
-  const [password, setPassword] = useState("Gaurav1234");
+  const [email, setEmail] = useState("bm@gmail.com");
+  const [password, setPassword] = useState("bm@12345");
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
 
@@ -160,13 +160,13 @@ export default function SignInForm() {
                     </span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  {/* <div className="flex items-center gap-3">
                     <Checkbox checked={isChecked} onChange={setIsChecked} />
                     <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">
                       Keep me logged in
                     </span>
-                  </div>
+                  </div> */}
                   <Link
                     to="/reset-password"
                     className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"

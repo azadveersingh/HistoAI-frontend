@@ -356,7 +356,7 @@ export default function AllMembers({
         console.log("JWT token:", localStorage.getItem("token"));
         console.log("Current user ID:", currentUserId);
         const users = await fetchAllUsers();
-        console.log("Fetched users:", users);
+        // console.log("Fetched users:", users);
         const activeUsers = users.filter((user: Member) => user.isActive);
         console.log("Active users:", activeUsers);
         const filteredUsers = activeUsers.filter(

@@ -29,11 +29,11 @@ export default function UserMetaCard() {
     const fetchProfileAndAvatar = async () => {
       try {
         const profile = await getProfile();
-        console.log("Profile fetched:", profile);
+        // console.log("Profile fetched:", profile);
         setUser(profile);
 
         if (profile.avatar) {
-          console.log("Fetching avatar with path:", profile.avatar);
+          // console.log("Fetching avatar with path:", profile.avatar);
           const token = localStorage.getItem("token");
           if (!token) {
             console.error("No token found in localStorage");
