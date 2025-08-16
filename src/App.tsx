@@ -42,12 +42,14 @@ import ToolsPage from "./components/Tools/ToolsPage";
 import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage";
 import BookUploadManager from "./components/Books/BookUploadManager";
 import { AuthProvider } from "./context/AuthProvider";
+import { SocketProvider } from "./context/SocketProvider";
 
 
 
 export default function App() {
   return (
     <AuthProvider>
+      <SocketProvider>
       <Router>
         <ScrollToTop />
         <Routes>
@@ -164,6 +166,7 @@ export default function App() {
         theme="colored"
         style={{ zIndex: 100000 }}
       />
+      </SocketProvider>
     </AuthProvider>
   );
 }

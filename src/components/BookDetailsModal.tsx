@@ -10,12 +10,11 @@ interface BookDetailsModalProps {
   onClose: () => void;
   files: File[];
   setFiles: (files: File[]) => void;
-  setSuccess: (success: boolean) => void;
+  setSuccess: (response: any) => void;
   setError: (error: string) => void;
   setIsSubmitting: (isSubmitting: boolean) => void;
   isSubmitting: boolean;
   error: string;
-  setActiveTab?: (tab: "tab1" | "tab2") => void;
 }
 
 interface BookFormData {
@@ -38,7 +37,6 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
   setIsSubmitting,
   isSubmitting,
   error,
-  setActiveTab,
 }) => {
   const [formData, setFormData] = useState<BookFormData>({});
   const [activeFile, setActiveFile] = useState<string | null>(null);
@@ -143,39 +141,32 @@ const BookDetailsModal: React.FC<BookDetailsModalProps> = ({
       setIsSubmitting(false);
       return;
     }
-
+    onClose();
     try {
-      for (const file of files) {
-        const uploadData = new FormData();
+      const uploadData = new FormData();
+      files.forEach((file) => {
         const data = formData[file.name];
         uploadData.append("files", file);
         uploadData.append("bookName", data.bookName.toUpperCase());
         uploadData.append("author", data.author.toUpperCase());
         uploadData.append("author2", data.author2.toUpperCase());
         uploadData.append("edition", data.edition.toUpperCase());
+      });
 
-        // console.log(`FormData for ${file.name}:`);
-        for (let [key, value] of uploadData.entries()) {
-          console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
-        }
-
-        await uploadBooks(uploadData);
+      for (let [key, value] of uploadData.entries()) {
+        console.log(`  ${key} = ${value instanceof File ? value.name : value}`);
       }
 
-      setSuccess(true);
+      const response = await uploadBooks(uploadData);
+      setSuccess(response.data); // Pass full response to handle failed uploads
       setFormData({});
       setShowAuthor2({});
-      setFiles([]);
-      onClose();
-      if (setActiveTab) {
-        console.log("Switching to processing tab (tab2)");
-        setActiveTab("tab2");
-      }
-      navigate("/books/manage", { state: { tab: "tab2" } });
+      setIsSubmitting(false);
+     
+      // Navigation is handled in BookUpload.tsx based on response
     } catch (err: any) {
       console.error("Upload error:", err);
       setError(err.response?.data?.error || "Failed to upload books. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };

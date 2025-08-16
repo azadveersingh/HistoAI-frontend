@@ -176,7 +176,7 @@ useEffect(() => {
   return (
     <>
       <PageMeta
-        title="Create Project | TailAdmin"
+        title="Create Project | HistoAI"
         description="Create new project page"
       />
       <AppSidebar />
@@ -262,11 +262,11 @@ useEffect(() => {
                   </TableHeader>
                   <TableBody>
                     {filteredMembers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="p-3 sm:p-4 text-center text-gray-500 dark:text-gray-400">
-                          No members found matching your search
-                        </TableCell>
-                      </TableRow>
+                      
+                        <h2 className="text-center">No members found</h2>
+                          
+                        
+                      
                     ) : (
                       filteredMembers.map((member) => (
                         <TableRow

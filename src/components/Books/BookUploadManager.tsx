@@ -4,6 +4,7 @@ import AllBooks from "../Books/AllBooks";
 import ProcessingBooks from "../Books/ProcessingBooks";
 import Button from "../../components/ui/button/Button";
 import PageBreadcrumb from "../common/PageBreadCrumb";
+import { useSocket } from "../../context/SocketProvider";
 
 interface BookUploadManagerProps {
   searchQuery?: string;
@@ -19,29 +20,52 @@ interface TabConfig {
 const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  // Initialize activeTab from location.state.tab, default to "tab1"
   const [activeTab, setActiveTab] = useState<"tab1" | "tab2">(
     (location.state?.tab as "tab1" | "tab2") || "tab1"
   );
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { subscribeToBookProgress, unsubscribeFromBookProgress } = useSocket();
 
-  // Update activeTab if location.state.tab changes
   useEffect(() => {
+    // Subscribe to book_progress events
+    const handleProgressUpdate = (data: any) => {
+      if (data.status === "data_extraction_done" && activeTab === "tab2") {
+        setRefreshTrigger((prev) => prev + 1); // Refresh processing tab
+        setActiveTab("tab1"); // Switch to central repository tab
+        navigate(location.pathname, { state: { tab: "tab1", refresh: true } });
+      } else if (activeTab === "tab2") {
+        setRefreshTrigger((prev) => prev + 1); // Refresh on other updates
+      }
+    };
+    subscribeToBookProgress(handleProgressUpdate);
+
+    // Handle location state changes
     if (location.state?.tab && location.state.tab !== activeTab) {
       setActiveTab(location.state.tab as "tab1" | "tab2");
+      if (location.state.tab === "tab2" || location.state?.refresh) {
+        setRefreshTrigger((prev) => prev + 1);
+      }
     }
-  }, [location.state]);
+
+    // Cleanup WebSocket subscription
+    return () => {
+      unsubscribeFromBookProgress(handleProgressUpdate);
+    };
+  }, [location.state, activeTab, subscribeToBookProgress, unsubscribeFromBookProgress]);
+
+  const handleTabChange = (tab: "tab1" | "tab2") => {
+    setActiveTab(tab);
+    if (tab === "tab2") {
+      setRefreshTrigger((prev) => prev + 1); // Refresh when switching to tab2
+    }
+    navigate(location.pathname, { state: { tab } });
+  };
 
   const tabConfig: TabConfig = {
     tab1: "Central Repository",
     tab2: "Book Upload and Processing",
     component1: <AllBooks searchQuery={searchQuery} isCentralRepository={true} />,
-    component2: <ProcessingBooks />,
-  };
-
-  const handleTabChange = (tab: "tab1" | "tab2") => {
-    setActiveTab(tab);
-    // Update URL state to persist tab selection
-    navigate(location.pathname, { state: { tab } });
+    component2: <ProcessingBooks refreshTrigger={refreshTrigger} />,
   };
 
   return (
@@ -95,10 +119,8 @@ const BookUploadManager: FC<BookUploadManagerProps> = ({ searchQuery = "" }) => 
               <div className="flex justify-end mb-4">
                 <Button
                   variant="primary"
-
                   onClick={() => navigate("/books/upload", { state: { fromTab: "tab2" } })}
                   className="w-full sm:w-auto px-4 sm:px-6 py-2 text-sm sm:text-base font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-colors duration-200"
-
                 >
                   Upload Book
                 </Button>

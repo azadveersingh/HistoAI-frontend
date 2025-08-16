@@ -31,7 +31,7 @@ export const uploadBooks = async (formData: FormData) => {
   }
 };
 
-// ------------------ 2. Get All Books (Admin/BM/PM/USER) ------------------
+// ------------------ 2. Get All Books (Central Repository) ------------------
 export const fetchAllBooks = async () => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/`, {
@@ -45,7 +45,9 @@ export const fetchAllBooks = async () => {
     }
     return books.map((book: any) => ({
       ...book,
-      author2: book.author2 || "", // Default to empty string if not present
+      author2: book.author2 || "",
+      fileUrl: book.fileUrl ? `${API_BASE}/Uploads/book/${book.fileUrl}` : "", // Ensure correct path
+      previewUrl: book.previewUrl ? `${API_BASE}/Uploads/book/${book.previewUrl}` : "",
     }));
   } catch (error: any) {
     console.error("fetchAllBooks error:", error.response?.data || error.message);
@@ -67,7 +69,12 @@ export const fetchProcessingBooks = async () => {
     }
     return books.map((book: any) => ({
       ...book,
-      author2: book.author2 || "",
+      totalPages: book.totalPages || 0,
+      currentPage: book.currentPage || 0,
+      ocrStatus: book.ocrStatus || "pending",
+      structuredDataStatus: book.structuredDataStatus || "pending",
+      structuredDataProgress: book.structuredDataProgress || 0,
+      errorMessage: book.errorMessage || book.structuredDataErrorMessage || undefined,
     }));
   } catch (error: any) {
     console.error("fetchProcessingBooks error:", error.response?.data || error.message);
@@ -120,14 +127,12 @@ export const completeOcrProcess = async (bookId: string) => {
     const response = await axios.post(
       `${API_BASE}/api/books/${bookId}/ocr/complete`,
       {},
-      {
-        headers: getAuthHeaders(),
-      }
+      { headers: getAuthHeaders() }
     );
-    console.log("completeOcrProcess: Response received:", response.data);
+    console.log("completeOcrProcess response:", response.data);
     return response.data;
   } catch (error: any) {
-    console.error("completeOcrProcess: Error:", error.response?.data || error.message);
+    console.error("completeOcrProcess error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.error || "Failed to complete OCR process");
   }
 };
@@ -178,7 +183,9 @@ export const fetchProjectBooks = async (projectId: string) => {
     }
     return books.map((book: any) => ({
       ...book,
-      author2: book.author2 || "", // Default to empty string if not present
+      author2: book.author2 || "",
+      fileUrl: book.fileUrl ? `${API_BASE}/Uploads/book/${book.fileUrl}` : "",
+      previewUrl: book.previewUrl ? `${API_BASE}/Uploads/book/${book.previewUrl}` : "",
     }));
   } catch (error: any) {
     console.error("fetchProjectBooks error:", error.response?.data || error.message);
@@ -292,5 +299,25 @@ export const fetchOcrText = async (bookId: string): Promise<string> => {
       error.response ? { status: error.response.status, data: error.response.data } : error.message
     );
     throw new Error(error.response?.data?.error || "Failed to fetch OCR text file");
+  }
+};
+
+// ------------------ Fetch Structured Data File ------------------
+export const fetchStructuredData = async (bookId: string): Promise<string> => {
+  try {
+    console.log(`fetchStructuredData: Fetching structured data for book: ${bookId}`);
+    const response = await axios.get(`${API_BASE}/api/books/${bookId}/structured-data`, {
+      headers: getAuthHeaders(),
+      responseType: "blob",
+    });
+    const blobUrl = URL.createObjectURL(response.data);
+    console.log(`fetchStructuredData: Blob URL created: ${blobUrl}`);
+    return blobUrl;
+  } catch (error: any) {
+    console.error(
+      "fetchStructuredData: Error:",
+      error.response ? { status: error.response.status, data: error.response.data } : error.message
+    );
+    throw new Error(error.response?.data?.error || "Failed to fetch structured data file");
   }
 };
