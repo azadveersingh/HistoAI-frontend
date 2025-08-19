@@ -71,7 +71,7 @@ export default function AllBooks({
       try {
         setLoading(true);
         const promises = [
-          fetchAllBooks(),
+          fetchAllBooks(isCentralRepository ? "all" : "public"), // All books in central repo, public elsewhere
           projectId && !isCentralRepository && !collectionId ? fetchProjectBooks(projectId) : Promise.resolve([]),
         ];
 
@@ -82,10 +82,6 @@ export default function AllBooks({
         }
 
         const [allBooks, projectBooks, collectionData] = await Promise.all(promises);
-
-        // console.log("Fetched all books:", allBooks);
-        // console.log("Fetched project books:", projectBooks);
-        // console.log("Fetched collection data:", collectionData);
 
         const validBooks = allBooks.filter(
           (book: Book) => book && book._id && typeof book._id === "string"
@@ -146,7 +142,7 @@ export default function AllBooks({
         setAlert({
           variant: "info",
           title: "No Books Selected",
-          message: "Please select at least one book to add to the collection.",
+          message: "Please select at least one public book to add to the collection.",
         });
         return;
       }
@@ -157,7 +153,7 @@ export default function AllBooks({
         setAlert({
           variant: "info",
           title: "No Books Selected",
-          message: "Please select at least one book to add to the project.",
+          message: "Please select at least one public book to add to the project.",
         });
         return;
       }
@@ -188,7 +184,7 @@ export default function AllBooks({
       setAlert({
         variant: "success",
         title: "Books Added",
-        message: `${checkedBooks.length} book(s) added successfully.`,
+        message: `${checkedBooks.length} public book(s) added successfully.`,
       });
     } catch (err: any) {
       console.error("Error adding books:", err);
@@ -499,15 +495,21 @@ export default function AllBooks({
     [sortedBooks, searchQuery]
   );
 
-  if (loading) return <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">Loading books...</div>;
-  if (error) return <div className="text-sm sm:text-base text-red-600 dark:text-red-400">{error}</div>;
+  if (loading) return (
+    <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
+      Loading {isCentralRepository ? "books" : "public books"}...
+    </div>
+  );
+  if (error) return (
+    <div className="text-sm sm:text-base text-red-600 dark:text-red-400">{error}</div>
+  );
 
   return (
     <ComponentCard
       title={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 sm:gap-4">
           <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
-            All Books
+            {isCentralRepository ? "Central Repository" : "Public Books"}
           </span>
           <div className="flex flex-wrap gap-2">
             {isCentralRepository && role === "book_manager" && (
@@ -583,7 +585,7 @@ export default function AllBooks({
               {filteredBooks.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isCentralRepository ? 9 : 6} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    No books found
+                    {isCentralRepository ? "No books found" : "No public books found"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -609,7 +611,7 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => { }}
+                            onChange={() => {}}
                             label=""
                             className="text-gray-700 dark:text-gray-200 scale-100"
                             aria-label={`Book ${book.bookName || "Untitled Book"} already in collection`}
@@ -621,7 +623,7 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => { }}
+                            onChange={() => {}}
                             label=""
                             className="text-gray-700 dark:text-gray-200 scale-100"
                             aria-label={`Book ${book.bookName || "Untitled Book"} already in project`}
@@ -715,7 +717,7 @@ export default function AllBooks({
           message={
             isCentralRepository
               ? `Are you sure you want to delete ${checkedBooks.length} book(s)? This action cannot be undone.`
-              : `Are you sure you want to add ${checkedBooks.length} book(s) to the ${collectionId ? "collection" : "project"}?`
+              : `Are you sure you want to add ${checkedBooks.length} public book(s) to the ${collectionId ? "collection" : "project"}?`
           }
           onConfirm={isCentralRepository ? handleConfirmDelete : handleConfirmAdd}
           onCancel={() => setShowConfirmDialog(false)}

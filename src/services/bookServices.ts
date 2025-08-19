@@ -1,7 +1,6 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
 
-// ------------------ Auth Header Utility ------------------
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {
@@ -9,7 +8,6 @@ const getAuthHeaders = () => {
   };
 };
 
-// ------------------ 1. Upload Books ------------------
 export const uploadBooks = async (formData: FormData) => {
   console.log("uploadBooks: Sending FormData with entries:");
   for (let [key, value] of formData.entries()) {
@@ -31,8 +29,7 @@ export const uploadBooks = async (formData: FormData) => {
   }
 };
 
-// ------------------ 2. Get All Books (Central Repository) ------------------
-export const fetchAllBooks = async () => {
+export const fetchAllBooks = async (visibilityFilter: "public" | "all" = "public") => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/`, {
       headers: getAuthHeaders(),
@@ -43,19 +40,29 @@ export const fetchAllBooks = async () => {
       console.error("fetchAllBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books.map((book: any) => ({
-      ...book,
-      author2: book.author2 || "",
-      fileUrl: book.fileUrl ? `${API_BASE}/Uploads/book/${book.fileUrl}` : "", // Ensure correct path
-      previewUrl: book.previewUrl ? `${API_BASE}/Uploads/book/${book.previewUrl}` : "",
-    }));
+    const filteredBooks = books.filter((book: any) => {
+      if (!book || !book._id || typeof book._id !== "string") {
+        console.warn("Invalid book object filtered out:", book);
+        return false;
+      }
+      return visibilityFilter === "all" || book.visibility === "public";
+    });
+    return filteredBooks.map((book: any) => {
+      const cleanPreviewUrl = book.previewUrl ? book.previewUrl.replace(/^\/+/, "") : "";
+      const cleanFrontPageImagePath = book.frontPageImagePath ? book.frontPageImagePath.replace(/^\/+/, "") : "";
+      return {
+        ...book,
+        author2: book.author2 || "",
+        previewUrl: cleanPreviewUrl ? `${API_BASE}/Uploads/book/${cleanPreviewUrl}` : "",
+        frontPageImagePath: cleanFrontPageImagePath ? `${API_BASE}/Uploads/book/${cleanFrontPageImagePath}` : "",
+      };
+    });
   } catch (error: any) {
     console.error("fetchAllBooks error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.error || "Failed to fetch books");
   }
 };
 
-// ------------------ 3. Get Processing Books ------------------
 export const fetchProcessingBooks = async () => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/processing`, {
@@ -67,22 +74,27 @@ export const fetchProcessingBooks = async () => {
       console.error("fetchProcessingBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books.map((book: any) => ({
-      ...book,
-      totalPages: book.totalPages || 0,
-      currentPage: book.currentPage || 0,
-      ocrStatus: book.ocrStatus || "pending",
-      structuredDataStatus: book.structuredDataStatus || "pending",
-      structuredDataProgress: book.structuredDataProgress || 0,
-      errorMessage: book.errorMessage || book.structuredDataErrorMessage || undefined,
-    }));
+    return books.map((book: any) => {
+      const cleanPreviewUrl = book.previewUrl ? book.previewUrl.replace(/^\/+/, "") : "";
+      const cleanFrontPageImagePath = book.frontPageImagePath ? book.frontPageImagePath.replace(/^\/+/, "") : "";
+      return {
+        ...book,
+        totalPages: book.totalPages || 0,
+        currentPage: book.currentPage || 0,
+        ocrStatus: book.ocrStatus || "pending",
+        structuredDataStatus: book.structuredDataStatus || "pending",
+        structuredDataProgress: book.structuredDataProgress || 0,
+        errorMessage: book.errorMessage || book.structuredDataErrorMessage || undefined,
+        previewUrl: cleanPreviewUrl ? `${API_BASE}/Uploads/book/${cleanPreviewUrl}` : "",
+        frontPageImagePath: cleanFrontPageImagePath ? `${API_BASE}/Uploads/book/${cleanFrontPageImagePath}` : "",
+      };
+    });
   } catch (error: any) {
     console.error("fetchProcessingBooks error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.error || "Failed to fetch processing books");
   }
 };
 
-// ------------------ 4. Delete Books ------------------
 export const deleteBooks = async (bookIds: string[]) => {
   try {
     console.log("deleteBooks: Sending request to delete books:", bookIds);
@@ -100,7 +112,6 @@ export const deleteBooks = async (bookIds: string[]) => {
   }
 };
 
-// ------------------ 5. Update Book Visibility ------------------
 export const updateBookVisibility = async (
   bookId: string,
   visibility: "private" | "public"
@@ -121,7 +132,6 @@ export const updateBookVisibility = async (
   }
 };
 
-// ------------------ 6. Complete OCR Process ------------------
 export const completeOcrProcess = async (bookId: string) => {
   try {
     const response = await axios.post(
@@ -137,7 +147,6 @@ export const completeOcrProcess = async (bookId: string) => {
   }
 };
 
-// ------------------ 7. Add Books to Project ------------------
 export const addBooksToProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -153,7 +162,6 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
   }
 };
 
-// ------------------ 8. Remove Books from Project ------------------
 export const removeBooksFromProject = async (projectId: string, bookIds: string[]) => {
   try {
     const response = await axios.post(
@@ -169,7 +177,6 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
   }
 };
 
-// ------------------ 9. Fetch Project Books ------------------
 export const fetchProjectBooks = async (projectId: string) => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/projects/${projectId}/books`, {
@@ -181,19 +188,29 @@ export const fetchProjectBooks = async (projectId: string) => {
       console.error("fetchProjectBooks: Expected an array, got:", response.data.books);
       return [];
     }
-    return books.map((book: any) => ({
-      ...book,
-      author2: book.author2 || "",
-      fileUrl: book.fileUrl ? `${API_BASE}/Uploads/book/${book.fileUrl}` : "",
-      previewUrl: book.previewUrl ? `${API_BASE}/Uploads/book/${book.previewUrl}` : "",
-    }));
+    const filteredBooks = books.filter((book: any) => {
+      if (!book || !book._id || typeof book._id !== "string") {
+        console.warn("Invalid book object filtered out:", book);
+        return false;
+      }
+      return book.visibility === "public"; // Only public books for projects
+    });
+    return filteredBooks.map((book: any) => {
+      const cleanPreviewUrl = book.previewUrl ? book.previewUrl.replace(/^\/+/, "") : "";
+      const cleanFrontPageImagePath = book.frontPageImagePath ? book.frontPageImagePath.replace(/^\/+/, "") : "";
+      return {
+        ...book,
+        author2: book.author2 || "",
+        previewUrl: cleanPreviewUrl ? `${API_BASE}/Uploads/book/${cleanPreviewUrl}` : "",
+        frontPageImagePath: cleanFrontPageImagePath ? `${API_BASE}/Uploads/book/${cleanFrontPageImagePath}` : "",
+      };
+    });
   } catch (error: any) {
     console.error("fetchProjectBooks error:", error.response?.data || error.message);
     throw new Error(error.response?.data?.error || "Failed to fetch project books");
   }
 };
 
-// ------------------ 10. Fetch Projects for Book ------------------
 export const fetchProjectsForBook = async (bookId: string) => {
   try {
     const response = await axios.get(`${API_BASE}/api/books/${bookId}/projects`, {
@@ -212,13 +229,12 @@ export const fetchProjectsForBook = async (bookId: string) => {
   }
 };
 
-// ------------------ 11. Update Book Details ------------------
 export const updateBookDetails = async (
   bookId: string,
   bookData: {
     bookName?: string;
-    author: string; // Mandatory
-    author2?: string; // Optional
+    author: string;
+    author2?: string;
     edition?: string;
   }
 ) => {
@@ -242,11 +258,12 @@ export const updateBookDetails = async (
   }
 };
 
-// ------------------ Fetch Book File (PDF) ------------------
-export const fetchBookFile = async (filePath: string): Promise<string> => {
+export const fetchBookFile = async (previewUrl: string): Promise<string> => {
   try {
-    console.log(`fetchBookFile: Fetching book file: ${filePath}`);
-    const response = await axios.get(`${API_BASE}/Uploads/book/${filePath}`, {
+    console.log(`fetchBookFile: Fetching book file: ${previewUrl}`);
+    const cleanPath = previewUrl.replace(`${API_BASE}/Uploads/book/`, "").replace(/^\/+/, "");
+    console.log(`fetchBookFile: Cleaned path: ${cleanPath}`);
+    const response = await axios.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
       headers: getAuthHeaders(),
       responseType: "blob",
     });
@@ -262,11 +279,12 @@ export const fetchBookFile = async (filePath: string): Promise<string> => {
   }
 };
 
-// ------------------ Fetch Book Preview Image ------------------
 export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise<string> => {
   try {
     console.log(`fetchBookPreviewImage: Fetching preview image: ${frontPageImagePath}`);
-    const response = await axios.get(`${API_BASE}/Uploads/book/${frontPageImagePath}`, {
+    const cleanPath = frontPageImagePath.replace(`${API_BASE}/Uploads/book/`, "").replace(/^\/+/, "");
+    console.log(`fetchBookPreviewImage: Cleaned path: ${cleanPath}`);
+    const response = await axios.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
       headers: getAuthHeaders(),
       responseType: "blob",
     });
@@ -282,7 +300,6 @@ export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise
   }
 };
 
-// ------------------ Fetch OCR Text File ------------------
 export const fetchOcrText = async (bookId: string): Promise<string> => {
   try {
     console.log(`fetchOcrText: Fetching OCR text for book: ${bookId}`);
@@ -302,7 +319,6 @@ export const fetchOcrText = async (bookId: string): Promise<string> => {
   }
 };
 
-// ------------------ Fetch Structured Data File ------------------
 export const fetchStructuredData = async (bookId: string): Promise<string> => {
   try {
     console.log(`fetchStructuredData: Fetching structured data for book: ${bookId}`);

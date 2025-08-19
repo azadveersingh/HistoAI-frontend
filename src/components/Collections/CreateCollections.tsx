@@ -35,21 +35,22 @@ const CollectionCreate: React.FC = () => {
   const [error, setError] = useState("");
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const booksData = await fetchAllBooks();
+        const booksData = await fetchAllBooks("public"); // Fetch only public books
         const validBooks = booksData.filter(
-          (book: Book) => book && book._id && typeof book._id === "string"
+          (book: Book) => book && book._id && typeof book._id === "string" && book.visibility === "public"
         );
         if (booksData.length !== validBooks.length) {
-          console.warn("Filtered out invalid books:", booksData.filter((book: Book) => !validBooks.includes(book)));
+          console.warn("Filtered out invalid or non-public books:", booksData.filter((book: Book) => !validBooks.includes(book)));
         }
         setBookOptions(validBooks);
       } catch (err: any) {
-        setError(err.response?.data?.error || "Failed to load books");
+        setError(err.response?.data?.error || "Failed to load public books");
       } finally {
         setLoading(false);
       }
@@ -61,7 +62,7 @@ const CollectionCreate: React.FC = () => {
     if (showSuccessAlert) {
       const timer = setTimeout(() => {
         setShowSuccessAlert(false);
-      }, 5000); // Hide success alert after 5 seconds
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [showSuccessAlert]);
@@ -69,7 +70,7 @@ const CollectionCreate: React.FC = () => {
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
-        setError(""); // Clear error after 5 seconds
+        setError("");
       }, 5000);
       return () => clearTimeout(timer);
     }
@@ -89,7 +90,7 @@ const CollectionCreate: React.FC = () => {
       return;
     }
     if (selectedBooks.length === 0) {
-      setError("Please select at least one book");
+      setError("Please select at least one public book");
       return;
     }
     try {
@@ -159,11 +160,9 @@ const CollectionCreate: React.FC = () => {
 
   const isCreateButtonDisabled = !name.trim() || selectedBooks.length === 0 || isSubmitting;
 
-  const [loading, setLoading] = useState(true); // Moved to avoid reference error
-
   if (loading) return (
     <div className="text-gray-600 dark:text-gray-400 text-center p-4">
-      Loading books...
+      Loading public books...
     </div>
   );
   if (error && !bookOptions.length) {
@@ -225,7 +224,7 @@ const CollectionCreate: React.FC = () => {
           <div className="bg-gray-50 dark:bg-gray-800 p-4 sm:p-6 rounded-lg">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Select Books
+                Select Public Books
               </h3>
               <div className="w-full sm:w-64">
                 <Label htmlFor="search-books" className="text-gray-700 dark:text-gray-200">
@@ -236,7 +235,7 @@ const CollectionCreate: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search books..."
+                  placeholder="Search public books..."
                   className="w-full text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-brand-500 dark:focus:ring-brand-400"
                 />
               </div>
@@ -273,7 +272,7 @@ const CollectionCreate: React.FC = () => {
                   {filteredBooks.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="p-3 sm:p-4 text-center text-gray-500 dark:text-gray-400">
-                        No books found matching your search
+                        No public books found matching your search
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -307,7 +306,7 @@ const CollectionCreate: React.FC = () => {
                           {book.pages || "N/A"}
                         </TableCell>
                         <TableCell className="p-3 sm:p-4 text-gray-900 dark:text-gray-100 capitalize">
-                          {book.visibility || "Private"}
+                          {book.visibility || "Public"}
                         </TableCell>
                       </TableRow>
                     ))
