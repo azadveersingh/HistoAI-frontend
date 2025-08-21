@@ -43,129 +43,148 @@ import ToolsWelcomePage from "./components/Tools/ToolsWelcomePage";
 import BookUploadManager from "./components/Books/BookUploadManager";
 import { AuthProvider } from "./context/AuthProvider";
 import { SocketProvider } from "./context/SocketProvider";
-
-
+import ExcelViewer from "./Tools/DataExtraction/ExcelViewer";
+import DataExtractionLayout from "./layout/DataExtractionLayout";
 
 export default function App() {
   return (
     <AuthProvider>
       <SocketProvider>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/" element={<SignIn />} />
-          <Route path="*" element={<NotFound />} />
-
-          <Route
-            element={
-              <ProtectedRoute allowedRoles={["admin", "project_manager", "book_manager", "user"]}>
-                <AppLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route path="/dashboard" element={<Home />} />
+        <Router>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/" element={<SignIn />} />
+            <Route path="*" element={<NotFound />} />
             <Route
-              path="/admin/users"
               element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <UserManagementPage />
+                <ProtectedRoute allowedRoles={["admin", "project_manager", "book_manager", "user"]}>
+                  <AppLayout />
                 </ProtectedRoute>
               }
-            />
-            <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
-            <Route path="/collections/create" element={<CollectionCreate />} />
-            <Route path="/collections/create/:id" element={<CollectionCreate />} />
-            <Route
-              path="/dashboard/collections"
-              element={
-                <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
-                  <AllCollections />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/collections/:collectionId"
-              element={
-                <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
-                  <CollectionDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/books/manage"
-              element={
-                <ProtectedRoute allowedRoles={["book_manager"]}>
-                  <BookUploadManager />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/books/upload"
-              element={
-                <ProtectedRoute allowedRoles={["book_manager"]}>
-                  <BookUpload />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/project/:id" element={<ProjectPage />}>
+            >
+              <Route path="/dashboard" element={<Home />} />
               <Route
-                path="collections/add"
+                path="/admin/users"
                 element={
-                  <div>
-                    <ProjectCollections projectId={":id"} />
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <UserManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/dashboard/projects/create" element={<CreateProjectPage />} />
+              <Route path="/collections/create" element={<CollectionCreate />} />
+              <Route path="/collections/create/:id" element={<CollectionCreate />} />
+              <Route
+                path="/dashboard/collections"
+                element={
+                  <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
                     <AllCollections />
-                  </div>
+                  </ProtectedRoute>
                 }
               />
               <Route
-                path="books/add"
+                path="/collections/:collectionId"
                 element={
-                  <div>
-                    <ProjectBooks projectId={":id"} />
-                    <AllBooks />
-                  </div>
+                  <ProtectedRoute allowedRoles={["project_manager", "book_manager"]}>
+                    <CollectionDetails />
+                  </ProtectedRoute>
                 }
               />
               <Route
-                path="members/add"
+                path="/books/manage"
                 element={
-                  <div>
-                    <ProjectMembers projectId={":id"} />
-                    <AllMembers />
-                  </div>
+                  <ProtectedRoute allowedRoles={["book_manager"]}>
+                    <BookUploadManager />
+                  </ProtectedRoute>
                 }
               />
-              <Route path="tools/welcome" element={<ToolsWelcomePage />} />
-              <Route path="chatbot/welcome" element={<ToolsWelcomePage />} />
+              <Route
+                path="/books/upload"
+                element={
+                  <ProtectedRoute allowedRoles={["book_manager"]}>
+                    <BookUpload />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Moved /project/:id routes above /:projectId routes */}
+              <Route path="/project/:id" element={<ProjectPage />}>
+                <Route
+                  path="collections/add"
+                  element={
+                    <div>
+                      <ProjectCollections projectId={":id"} />
+                      <AllCollections />
+                    </div>
+                  }
+                />
+                <Route
+                  path="books/add"
+                  element={
+                    <div>
+                      <ProjectBooks projectId={":id"} />
+                      <AllBooks />
+                    </div>
+                  }
+                />
+                <Route
+                  path="members/add"
+                  element={
+                    <div>
+                      <ProjectMembers projectId={":id"} />
+                      <AllMembers />
+                    </div>
+                  }
+                />
+                <Route path="tools/welcome" element={<ToolsWelcomePage />} />
+                <Route path="chatbot/welcome" element={<ToolsWelcomePage />} />
+                {/* <Route
+                  path="data-extraction"
+                  element={<ExcelViewer />}
+                  loader={() => {
+                    console.log("ExcelViewer route hit"); // Debug log
+                    return null;
+                  }}
+                /> */}
+              </Route>
+              {/* Less specific routes below */}
+              <Route path="/:projectId/chatbot" element={<ChatbotPage projectId={":id"} />} />
+              <Route path="/:projectId/welcome" element={<ToolsPage projectId={":id"} />} />
+              <Route path="/profile" element={<UserProfiles />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/blank" element={<Blank />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              <Route path="/form-elements" element={<FormElements />} />
+              <Route path="/basic-tables" element={<BasicTables />} />
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/avatars" element={<Avatars />} />
+              <Route path="/badge" element={<Badges />} />
+              <Route path="/buttons" element={<Buttons />} />
+              <Route path="/images" element={<Images />} />
+              <Route path="/videos" element={<Videos />} />
+              <Route path="/line-chart" element={<LineChart />} />
+              <Route path="/bar-chart" element={<BarChart />} />
+              <Route path="/SearchBar" element={<SearchBar />} />
             </Route>
-            <Route path="/:projectId/chatbot" element={<ChatbotPage projectId={":id"} />} />
-            <Route path="/:projectId/welcome" element={<ToolsPage projectId={":id"} />} />
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/form-elements" element={<FormElements />} />
-            <Route path="/basic-tables" element={<BasicTables />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
-            <Route path="/SearchBar" element={<SearchBar />} />
-          </Route>
-        </Routes>
-      </Router>
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        theme="colored"
-        style={{ zIndex: 100000 }}
-      />
+            <Route
+              path="/project/:id/data-extraction"
+              element={
+                <ProtectedRoute allowedRoles={["admin", "project_manager", "book_manager", "user"]}>
+                  <DataExtractionLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<ExcelViewer />} />
+            </Route>
+          </Routes>
+        </Router>
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          theme="colored"
+          style={{ zIndex: 100000 }}
+        />
       </SocketProvider>
     </AuthProvider>
   );

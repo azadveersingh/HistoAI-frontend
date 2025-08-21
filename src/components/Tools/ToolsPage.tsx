@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiDatabase,
@@ -34,7 +35,7 @@ const TOOL_BUTTONS: Array<{
     bgColor: "bg-blue-600",
     hoverBgColor: "hover:bg-blue-700",
     ringColor: "ring-blue-500",
-    route: "tools/welcome",
+    route: "data-extraction",
   },
   {
     tool: "chatbot",
@@ -75,26 +76,36 @@ export default function ToolsPage({
   const [selectedBooks, setSelectedBooks] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(false);
   }, []);
 
   const toggleCollection = useCallback((id: string, checked: boolean) => {
-    setSelectedCollections((prev) =>
-      checked ? [...prev, id] : prev.filter((cid) => cid !== id)
-    );
+    setSelectedCollections((prev) => {
+      const newCollections = checked ? [...prev, id] : prev.filter((cid) => cid !== id);
+      console.log("Updated selectedCollections:", newCollections);
+      return newCollections;
+    });
   }, []);
 
   const toggleBook = useCallback((id: string, checked: boolean) => {
-    setSelectedBooks((prev) =>
-      checked ? [...prev, id] : prev.filter((bid) => bid !== id)
-    );
+    setSelectedBooks((prev) => {
+      const newBooks = checked ? [...prev, id] : prev.filter((bid) => bid !== id);
+      console.log("Updated selectedBooks:", newBooks);
+      return newBooks;
+    });
   }, []);
 
   const handleProceed = useCallback(
     (tool: ToolType, route: string) => {
-      const baseUrl = `/project/${projectId}/${route}`;
+      console.log("handleProceed called", { tool, route, selectedBooks, selectedCollections, projectId });
+      if (!projectId) {
+        console.error("projectId is undefined");
+        setError("Project ID is missing");
+        return;
+      }
       const queryParams = [
         selectedCollections.length
           ? `collections=${encodeURIComponent(selectedCollections.join(","))}`
@@ -106,10 +117,13 @@ export default function ToolsPage({
         .filter(Boolean)
         .join("&");
 
-      const url = queryParams ? `${baseUrl}?${queryParams}` : baseUrl;
+      const path = queryParams ? `/project/${projectId}/${route}?${queryParams}` : `/project/${projectId}/${route}`;
+      const url = `${window.location.origin}${path}`;
+      console.log("Navigating to:", url);
+      console.log("path:", path);
       window.open(url, "_blank", "noopener,noreferrer");
     },
-    [projectId, selectedCollections, selectedBooks]
+    [projectId, selectedCollections, selectedBooks, setError]
   );
 
   const isSelectionEmpty =
@@ -122,11 +136,8 @@ export default function ToolsPage({
         className="flex-1 overflow-hidden m-4 p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700"
       >
         <div className="space-y-6">
-          {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="min-w-0"></div>
-
-            {/* Tool Buttons */}
             <div className="flex flex-col gap-3 lg:min-w-[300px]">
               {!loading && !error && (
                 <motion.div
@@ -147,7 +158,10 @@ export default function ToolsPage({
                     }) => (
                       <Button
                         key={tool}
-                        onClick={() => handleProceed(tool, route)}
+                        onClick={() => {
+                          console.log(`Button clicked: ${label}`);
+                          handleProceed(tool, route);
+                        }}
                         disabled={isSelectionEmpty}
                         className={`
                           flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg
@@ -178,8 +192,6 @@ export default function ToolsPage({
               </div>
             </div>
           </div>
-
-          {/* Error */}
           <AnimatePresence>
             {error && (
               <motion.div
@@ -195,8 +207,6 @@ export default function ToolsPage({
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Resource Selection */}
           {!loading && !error && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="max-h-[50vh] overflow-y-auto">

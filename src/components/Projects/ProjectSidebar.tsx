@@ -65,7 +65,7 @@ const ProjectSidebar: FC<ProjectSidebarProps> = ({
     (path: string) => {
       return (
         location.pathname === path ||
-        (path === `/project/${projectId}/tools/welcome` &&
+        (path === `/project/${projectId}/tools` &&
           location.pathname === `/project/${projectId}`)
       );
     },

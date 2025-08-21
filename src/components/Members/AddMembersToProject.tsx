@@ -31,7 +31,7 @@ export default function AddMembersToProject() {
   return (
     <>
       <PageMeta
-        title="Add Members to Project | TailAdmin"
+        title="Add Members to Project | HistoAI"
         description="Add members to an existing project"
       />
       <AppSidebar />
