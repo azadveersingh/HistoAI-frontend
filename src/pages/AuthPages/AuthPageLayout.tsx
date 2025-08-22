@@ -12,10 +12,8 @@ export default function AuthLayout({
   return (
     <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0">
       <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
-        {/* Left Side (Form) */}
-        {children}
-
-        {/* Right Side (Carousel & Logo) */}
+        
+        {/* Left Side (Carousel & Logo) */}
         <div className="items-center hidden w-full h-full lg:w-1/2 bg-brand-950 dark:bg-white/5 lg:grid">
           <div className="flex flex-col items-center justify-start w-full h-full p-6">
             {/* Logo on Top */}
@@ -37,7 +35,6 @@ export default function AuthLayout({
               <p className="text-base text-gray-200 dark:text-gray-300 max-w-md leading-relaxed">
                 AI-powered historical data analysis
               </p>
-
             </div>
 
             {/* Carousel */}
@@ -75,6 +72,11 @@ export default function AuthLayout({
               </Carousel>
             </div>
           </div>
+        </div>
+
+        {/* Right Side (Form) */}
+        <div className="flex items-center justify-center w-full lg:w-1/2 p-6">
+          {children}
         </div>
 
         {/* Theme Toggler */}
