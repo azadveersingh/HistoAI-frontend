@@ -176,7 +176,6 @@ const ExcelViewer: React.FC = () => {
           enableFullScreenToggle
           enablePagination={false}
           enableDensityToggle={false}
-          enableDensityToggle={false}
 
           columnResizeMode="onChange"
           initialState={{
