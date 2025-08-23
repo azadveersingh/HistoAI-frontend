@@ -117,106 +117,104 @@ export const generateColumns = (
       size: 180,
       minSize: 120,
       Cell: ({ cell }) => {
-        let value = cell.getValue<string | null>();
-        const search = globalFilter?.toLowerCase();
-        if (!value) return "";
-        value = String(value).trim();
-        if (key === "SourceURL") {
-          if (!value || value === "N/A") return "N/A";
-          // Extract page number from URL
-          const [baseUrl, pageFragment] = value.split("#");
-          // Clean the baseUrl to match expected format (e.g., <book_id>/<filename>)
-          let cleanUrl = baseUrl
-            .replace(/^\/+/, "") // Remove leading slashes
-            .replace(/^Uploads\//, "") // Remove Uploads/ prefix
-            .replace(/^book\//, "") // Remove book/ prefix
-            .replace(/^books\//, "") // Remove books/ prefix
-            .replace(new RegExp(`^${api}/Uploads/books?/`), "") // Remove api base and Uploads/books/
-            .replace(/^https?:\/\/[^\/]+\/Uploads\/books?\//, ""); // Remove any full URL
-          const fullUrl = `${api}/Uploads/book/${cleanUrl}`;
-          console.log("SourceURL href:", fullUrl, "Page fragment:", pageFragment);
+  let value = cell.getValue<string | null>();
+  const search = globalFilter?.toLowerCase();
+  if (!value) return "";
+  value = String(value).trim();
+  if (key === "SourceURL") {
+    if (!value || value === "N/A") return "N/A";
+    // Extract page number from URL
+    const [baseUrl, pageFragment] = value.split("#");
+    // Clean the baseUrl to match expected format (e.g., <book_id>/<filename>)
+    let cleanUrl = baseUrl
+      .replace(/^\/+/, "") // Remove leading slashes
+      .replace(/^Uploads\//, "") // Remove Uploads/ prefix
+      .replace(/^book\//, "") // Remove book/ prefix
+      .replace(/^books\//, "") // Remove books/ prefix
+      .replace(new RegExp(`^${api}/Uploads/books?/`), "") // Remove api base and Uploads/books/
+      .replace(/^https?:\/\/[^\/]+\/Uploads\/books?\//, ""); // Remove any full URL
+    const fullUrl = `${api}/Uploads/book/${cleanUrl}`;
+    console.log("SourceURL href:", fullUrl, "Page fragment:", pageFragment);
 
-          const handleClick = async (e: React.MouseEvent) => {
-            e.preventDefault();
-            try {
-              // Get authentication token
-              const token = localStorage.getItem("token");
-              if (!token) {
-                throw new Error("No authentication token found. Please log in.");
-              }
-              // Fetch the PDF file directly using Axios
-              const response = await axios.get(fullUrl, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-                responseType: "blob",
-              });
-              const blobUrl = URL.createObjectURL(response.data);
-              const finalUrl = pageFragment ? `${blobUrl}#${pageFragment}` : blobUrl;
-              console.log(`Opening PDF: ${finalUrl}`);
-              window.open(finalUrl, "_blank");
-              // Revoke blob URL after a short delay to ensure it opens
-              setTimeout(() => {
-                URL.revokeObjectURL(blobUrl);
-                console.log(`Revoked blob URL: ${blobUrl}`);
-              }, 1000);
-            } catch (error: any) {
-              console.error("Error fetching PDF:", error);
-              // Handle blob error response
-              let errorMessage = "Unknown error";
-              if (error.response?.data) {
-                // If the error response is a blob, attempt to read it as JSON
-                try {
-                  const text = await error.response.data.text();
-                  const json = JSON.parse(text);
-                  errorMessage = json.error || "Failed to fetch PDF";
-                } catch {
-                  errorMessage = error.response?.data?.error || error.message || "Failed to fetch PDF";
-                }
-              } else {
-                errorMessage = error.message || "Failed to fetch PDF";
-              }
-              alert(`Failed to open PDF: ${errorMessage}`);
-            }
-          };
-
-          return (
-            <button
-              onClick={handleClick}
-              className="inline-block px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
-              title="Open PDF"
-            >
-              See Page
-            </button>
-          );
+    const handleClick = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          throw new Error("No authentication token found. Please log in.");
         }
-        if (search && value.toLowerCase().includes(search)) {
-          const parts = value.split(new RegExp(`(${search})`, "gi"));
-          return (
-            <span>
-              {parts.map((part, i) => {
-                if (part.toLowerCase() === search) {
-                  const ref = React.createRef<HTMLSpanElement>();
-                  if (collectingRefs.current) {
-                    tempRefsRef.current.push(ref);
-                  }
-                  return (
-                    <mark
-                      key={i}
-                      ref={ref}
-                      className="rounded px-1 bg-yellow-300 text-black"
-                    >
-                      {part}
-                    </mark>
-                  );
-                }
-                return part;
-              })}
-            </span>
-          );
+        const response = await axios.get(fullUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        });
+        const blobUrl = URL.createObjectURL(response.data);
+        const finalUrl = pageFragment ? `${blobUrl}#${pageFragment}` : blobUrl;
+        console.log(`Opening PDF: ${finalUrl}`);
+        window.open(finalUrl, "_blank");
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+          console.log(`Revoked blob URL: ${blobUrl}`);
+        }, 1000);
+      } catch (error: any) {
+        console.error("Error fetching PDF:", error);
+        let errorMessage = "Unknown error";
+        if (error.response?.data) {
+          try {
+            const text = await error.response.data.text();
+            const json = JSON.parse(text);
+            errorMessage = json.error || "Failed to fetch PDF";
+          } catch {
+            errorMessage = error.response?.data?.error || error.message || "Failed to fetch PDF";
+          }
+        } else {
+          errorMessage = error.message || "Failed to fetch PDF";
         }
-        return value;
+        alert(`Failed to open PDF: ${errorMessage}`);
       }
+    };
+
+    return (
+      <button
+        onClick={handleClick}
+        className="inline-block px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition"
+        title="Open PDF"
+      >
+        See Page
+      </button>
+    );
+  }
+  if (search && matchesSearchTerms(value, globalFilter.split(/[, ]+/).map(t => t.trim()))) {
+    let matchIndex = tempRefsRef.current.length; // Track the starting index for this cell
+    const parts = value.split(new RegExp(`(${globalFilter.split(/[, ]+/).map(t => t.trim()).join("|")})`, "gi"));
+    return (
+      <span>
+        {parts.map((part, i) => {
+          const searchTerms = globalFilter.split(/[, ]+/).map(t => t.trim());
+          if (searchTerms.some(term => part.toLowerCase() === term.toLowerCase())) {
+            const ref = React.createRef<HTMLSpanElement>();
+            if (collectingRefs.current) {
+              tempRefsRef.current.push(ref);
+            }
+            return (
+              <mark
+                key={`${i}-${matchIndex}`}
+                ref={ref}
+                className="rounded px-1 bg-yellow-300 text-black"
+                data-match-index={matchIndex++}
+              >
+                {part}
+              </mark>
+            );
+          }
+          return <span key={`${i}-${matchIndex}`}>{part}</span>;
+        })}
+      </span>
+    );
+  }
+  return value;
+}
     };
     if (FILTERABLE_COLUMNS.includes(key)) {
       columnDef.filterFn = (row, _id, filterValue: string) => {

@@ -65,7 +65,10 @@ export default function AllBooks({
   const [visibilityTarget, setVisibilityTarget] = useState<"public" | "private" | null>(null);
   const [associatedProjects, setAssociatedProjects] = useState<Project[]>([]);
   const role = localStorage.getItem("role");
-
+const trimText = (text: string, maxLength = 25) => {
+          if (!text) return "Untitled";
+          return text.length > maxLength ? text.substring(0, maxLength) + "..." : text;
+        };
   useEffect(() => {
     const loadBooks = async () => {
       try {
@@ -89,6 +92,7 @@ export default function AllBooks({
         if (allBooks.length !== validBooks.length) {
           console.warn("Filtered out invalid books:", allBooks.filter((book: Book) => !validBooks.includes(book)));
         }
+        
 
         // Fetch preview images and PDF blob URLs
         const booksWithPreviewsAndPdfs = await Promise.all(
@@ -509,7 +513,7 @@ export default function AllBooks({
     <ComponentCard
       title={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 sm:gap-4">
-          <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
+          <span className="text-lg sm:text-xl md:text-2xl text-center block text-gray-900 dark:text-gray-100">
             {isCentralRepository ? "Central Repository" : "All Books"}
           </span>
           <div className="flex flex-wrap gap-2">
@@ -660,17 +664,19 @@ export default function AllBooks({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 dark:text-blue-400 hover:underline text-sm sm:text-base"
+                          title={book.bookName || "Untitled"} // show full name on hover
                         >
-                          {book.bookName || "Untitled"}
+                          {trimText(book.bookName || "Untitled")}
                         </a>
                       ) : (
                         <span
                           className="text-gray-500 dark:text-gray-400 text-sm sm:text-base"
-                          title="PDF not available"
+                          title={book.bookName || "Untitled"} // show full name on hover
                         >
-                          {book.bookName || "Untitled"}
+                          {trimText(book.bookName || "Untitled")}
                         </span>
                       )}
+
                     </TableCell>
                     <TableCell className="w-1/4 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{getAuthorDisplay(book)}</TableCell>
                     <TableCell className="w-1/6 p-2 sm:p-4 text-sm sm:text-base text-gray-800 dark:text-gray-100">{book.edition || "N/A"}</TableCell>

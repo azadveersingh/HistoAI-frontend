@@ -134,7 +134,6 @@ const ExcelViewer: React.FC = () => {
     }
     setIsDownloading(true);
     try {
-      // Use project name for project-based downloads, pdfName for single book
       const baseFilename = selectedBooks.length > 0 || selectedCollections.length > 0
         ? projectName || "project_data"
         : pdfName || "data";
@@ -151,17 +150,17 @@ const ExcelViewer: React.FC = () => {
 
   return (
     <div
-      className="p-4 bg-gray-50 rounded-xl shadow-lg overflow-visible transition-all duration-300"
+      className="p-2 sm:p-4 md:p-0 lg:p-2 bg-gray-50 rounded-xl shadow-lg overflow-hidden w-full h-full flex flex-col"
       ref={containerRef}
     >
       {loading && (
-        <div className="flex justify-center items-center py-6">
+        <div className="flex justify-center items-center py-6 flex-1">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <p className="ml-3 text-gray-600 text-lg">Loading...</p>
+          <p className="ml-3 text-gray-600 text-sm sm:text-base md:text-lg">Loading...</p>
         </div>
       )}
       {error && (
-        <p className="text-red-500 text-center py-4 bg-red-50 rounded-lg">
+        <p className="text-red-500 text-center py-4 bg-red-50 rounded-lg text-sm sm:text-base">
           Error: {error}
         </p>
       )}
@@ -176,6 +175,7 @@ const ExcelViewer: React.FC = () => {
           enableRowNumbers={true}
           enableFullScreenToggle
           enablePagination={false}
+          enableDensityToggle={false}
           enableDensityToggle={false}
 
           columnResizeMode="onChange"
@@ -193,49 +193,50 @@ const ExcelViewer: React.FC = () => {
               borderRadius: "8px",
               boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
               transition: "all 0.4s ease-in-out",
+              width: "100%",
+              height: table.getState().isFullScreen ? ["100vh", "100vh", "100vh", "calc(100vh - 1rem)"] : "auto",
               ...(table.getState().isFullScreen
                 ? {
                     position: "fixed",
                     inset: 0,
                     top: 0,
                     left: 0,
-                    width: "100vw",
-                    height: "100vh",
                     borderRadius: 0,
                     zIndex: 999999,
                     backgroundColor: "#fff",
                     transform: "scale(1)",
                   }
                 : {
-                    transform: "scale(0.98)",
+                    transform: "scale(1)", // Removed slight scaling for large screens
                   }),
             },
           })}
           muiTableContainerProps={{
             sx: {
               tableLayout: "auto",
-              overflowX: "scroll",
+              overflowX: "auto",
               overflowY: "auto",
-              maxHeight: "70vh",
+              maxHeight: ["calc(100vh - 12rem)", "calc(100vh - 14rem)", "calc(100vh - 12rem)", "calc(100vh - 7rem)"],
+              width: "100%",
               backgroundColor: "#ffffff",
               paddingBottom: "0 !important",
               marginBottom: "0 !important",
               position: "relative",
               overflow: "visible",
-              paddingTop: "2rem",
+              paddingTop: "1.5rem",
             },
           }}
           muiTableHeadCellProps={{
             sx: {
               background: "linear-gradient(to bottom, #f9fafb, #f3f4f6)",
               fontWeight: 700,
-              fontSize: "0.95rem",
+              fontSize: ["0.8rem", "0.9rem", "0.95rem"],
               letterSpacing: "0.5px",
               textTransform: "capitalize",
               color: "#374151",
               borderBottom: "2px solid #e5e7eb",
               borderRight: "1px solid #e5e7eb",
-              padding: "14px 10px",
+              padding: ["8px 6px", "10px 8px", "12px 8px"],
               textAlign: "center",
               position: "sticky",
               top: 0,
@@ -259,9 +260,9 @@ const ExcelViewer: React.FC = () => {
               whiteSpace: "normal",
               wordWrap: "break-word",
               border: "1px solid #e5e7eb",
-              fontSize: "0.9rem",
+              fontSize: ["0.75rem", "0.8rem", "0.9rem"],
               textAlign: "left",
-              padding: "8px",
+              padding: ["6px", "8px"],
               color: "#374151",
               zIndex: 1,
               ...(row.original._bookName && {
@@ -304,8 +305,8 @@ const ExcelViewer: React.FC = () => {
               width: "100%",
               zIndex: 1000,
               "& .MuiInputBase-input": {
-                fontSize: "0.9rem",
-                padding: "6px 8px",
+                fontSize: ["0.75rem", "0.8rem", "0.9rem"],
+                padding: ["4px 6px", "6px 8px"],
                 borderRadius: "6px",
                 border: "1px solid #e5e7eb",
                 "&:focus": {
@@ -321,8 +322,8 @@ const ExcelViewer: React.FC = () => {
               width: "100%",
               zIndex: 1000,
               "& .MuiSelect-select": {
-                fontSize: "0.9rem",
-                padding: "6px 8px",
+                fontSize: ["0.75rem", "0.8rem", "0.9rem"],
+                padding: ["4px 6px", "6px 8px"],
                 borderRadius: "6px",
                 border: "1px solid #e5e7eb",
                 "&:focus": {
@@ -336,15 +337,15 @@ const ExcelViewer: React.FC = () => {
             },
           }}
           renderTopToolbarCustomActions={() => (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-4 py-3 bg-white rounded-t-lg border-b border-gray-200">
-              <div className="flex items-center gap-3 text-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 bg-white rounded-t-lg border-b border-gray-200">
+              <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                 <button
                   onClick={handleDownload}
                   disabled={isDownloading}
-                  className={`flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`flex items-center gap-2 bg-blue-600 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-md hover:bg-blue-700 transition-colors duration-200 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
                   title="Download Excel"
                 >
-                  <FaDownload className="text-sm" />
+                  <FaDownload className="text-xs sm:text-sm" />
                   <span>{isDownloading ? "Downloading..." : "Download Excel"}</span>
                 </button>
               </div>
