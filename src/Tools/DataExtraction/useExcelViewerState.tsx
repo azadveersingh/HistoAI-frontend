@@ -23,6 +23,7 @@ export const useExcelViewerState = () => {
   const [error, setError] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const tableContainerRef = useRef<HTMLDivElement>(null); // Added ref for table container
   const tempRefsRef = useRef<React.RefObject<HTMLElement>[]>([]);
   const collectingRefs = useRef<boolean>(false);
   const location = useLocation();
@@ -96,31 +97,41 @@ export const useExcelViewerState = () => {
   }, [llm]);
 
   useEffect(() => {
-    setCurrentMatchIndex(0);
     if (matchRefs.length > 0) {
-      scrollToMatch(0);
+      scrollToMatch(currentMatchIndex);
     }
-  }, [matchRefs]);
+  }, [currentMatchIndex, matchRefs]);
 
   const scrollToMatch = (index: number) => {
-    if (matchRefs[index]?.current) {
-      matchRefs[index].current.scrollIntoView({
+    const currentRef = matchRefs[index]?.current;
+    if (currentRef && tableContainerRef.current) {
+      // Scroll to the highlighted word
+      currentRef.scrollIntoView({
         behavior: "smooth",
         block: "center",
+        inline: "center",
       });
+
+      // Adjust table container scroll for better positioning
+      const rect = currentRef.getBoundingClientRect();
+      const tableRect = tableContainerRef.current.getBoundingClientRect();
+
+      // Vertical scroll adjustment
+      tableContainerRef.current.scrollTop += rect.top - tableRect.top - 100; // Adjust for header/toolbar
+
+      // Horizontal scroll adjustment
+      tableContainerRef.current.scrollLeft += rect.left - tableRect.left - 100; // Adjust for sidebar/columns
     }
   };
 
   const handleNext = () => {
     const nextIndex = (currentMatchIndex + 1) % matchRefs.length;
     setCurrentMatchIndex(nextIndex);
-    scrollToMatch(nextIndex);
   };
 
   const handlePrev = () => {
     const prevIndex = (currentMatchIndex - 1 + matchRefs.length) % matchRefs.length;
     setCurrentMatchIndex(prevIndex);
-    scrollToMatch(prevIndex);
   };
 
   return {
@@ -151,6 +162,7 @@ export const useExcelViewerState = () => {
     currentMatchIndex,
     setCurrentMatchIndex,
     containerRef,
+    tableContainerRef, // Added
     tempRefsRef,
     collectingRefs,
     handleNext,

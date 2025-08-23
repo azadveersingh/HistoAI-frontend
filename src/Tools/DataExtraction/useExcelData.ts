@@ -1,4 +1,4 @@
-
+import React from "react";
 import { useEffect, useCallback } from "react";
 import { fetchBookStructuredData, fetchProjectStructuredData } from "../../services/structuredDataServices";
 import { fetchAllBooks } from "../../services/bookServices";
@@ -460,31 +460,40 @@ export const useExcelData = ({
         setDataRaw([filteredData]);
         setColumns(generateColumns(headers, globalFilter, tempRefsRef, collectingRefs, filteredData));
 
-        // Manage search highlighting refs
-        collectingRefs.current = true;
-        tempRefsRef.current = [];
+// Manage search highlighting refs
+collectingRefs.current = true;
+tempRefsRef.current = [];
 
-        if (globalFilter) {
-          const refs = filteredData
-            .map((row, index) =>
-              FILTERABLE_COLUMNS.some(column =>
-                matchesSearchTerms(row[column], globalFilter.split(/[, ]+/).map(t => t.trim()))
-              )
-                ? index
-                : null
-            )
-            .filter((index): index is number => index !== null)
-            .map((index) => ({
-              current: document.querySelector(`[data-row-index="${index}"]`),
-            }));
+if (globalFilter) {
+  const searchTerms = globalFilter
+    .split(/[, ]+/)
+    .map(term => term.trim())
+    .filter(term => term.length > 0);
 
-          tempRefsRef.current = refs;
-        }
+  const refs: React.RefObject<HTMLElement>[] = [];
+  filteredData.forEach((row, rowIndex) => {
+    FILTERABLE_COLUMNS.forEach(column => {
+      const value = row[column];
+      if (matchesSearchTerms(value, searchTerms)) {
+        // Split the value into parts to identify each matched word
+        const parts = String(value).split(new RegExp(`(${searchTerms.join("|")})`, "gi"));
+        parts.forEach((part, partIndex) => {
+          if (searchTerms.some(term => part.toLowerCase() === term.toLowerCase())) {
+            // Create a ref for each matched word
+            refs.push(React.createRef<HTMLElement>());
+          }
+        });
+      }
+    });
+  });
 
-        setTimeout(() => {
-          collectingRefs.current = false;
-          setMatchRefs(tempRefsRef.current);
-        }, 100);
+  tempRefsRef.current = refs;
+}
+
+setTimeout(() => {
+  collectingRefs.current = false;
+  setMatchRefs(tempRefsRef.current);
+}, 100);
       } catch (err: any) {
         console.error("useExcelData error:", err);
         setError(err.message || "Failed to fetch data");
