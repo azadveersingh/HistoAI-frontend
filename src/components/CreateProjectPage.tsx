@@ -36,28 +36,33 @@ export default function CreateProjectPage() {
   const navigate = useNavigate();
 
   // Fetch all users for member selection
-useEffect(() => {
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const users = await fetchAllUsers();
-      const activeUsers = users.filter((user: User) => user.isActive);
-      // Exclude admin, book_manager roles, and invalid role types
-      const filteredUsers = activeUsers.filter((user: User) => {
-        return typeof user.role === "string" &&
-          user.role.toLowerCase() !== "admin" &&
-          user.role.toLowerCase() !== "book_manager";
-      });
-      setMembers(filteredUsers);
-    } catch (err) {
-      setError("Failed to load members");
-      console.error("Error fetching members:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-  loadData();
-}, []);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const users = await fetchAllUsers();
+        // const activeUsers = users.filter((user: User) => user.isActive);
+        // Ensure users is an array before filtering
+        const activeUsers = Array.isArray(users)
+          ? users.filter((user: User) => user.isActive)
+          : [];
+
+        // Exclude admin, book_manager roles, and invalid role types
+        const filteredUsers = activeUsers.filter((user: User) => {
+          return typeof user.role === "string" &&
+            user.role.toLowerCase() !== "admin" &&
+            user.role.toLowerCase() !== "book_manager";
+        });
+        setMembers(filteredUsers);
+      } catch (err) {
+        setError("Failed to load members");
+        console.error("Error fetching members:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (showSuccessAlert) {
@@ -262,11 +267,11 @@ useEffect(() => {
                   </TableHeader>
                   <TableBody>
                     {filteredMembers.length === 0 ? (
-                      
-                        <h2 className="text-center">No members found</h2>
-                          
-                        
-                      
+
+                      <h2 className="text-center">No members found</h2>
+
+
+
                     ) : (
                       filteredMembers.map((member) => (
                         <TableRow

@@ -1,5 +1,7 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
 
 export const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
@@ -12,7 +14,7 @@ export const getAuthHeaders = () => {
 // export const fetchStructuredData = async (bookId: string): Promise<string> => {
 //   try {
 //     console.log(`fetchStructuredData: Fetching structured data for book: ${bookId}`);
-//     const response = await axios.get(`${API_BASE}/api/books/${bookId}/structured-data`, {
+//     const response = await axiosInstance.get(`${API_BASE}/api/books/${bookId}/structured-data`, {
 //       headers: getAuthHeaders(),
 //       responseType: "blob",
 //     });
@@ -39,7 +41,7 @@ export const getAuthHeaders = () => {
 export const fetchBookStructuredData = async (bookId: string): Promise<any> => {
   try {
     console.log(`fetchBookStructuredData: Fetching structured data for book: ${bookId}`);
-    const response = await axios.get(`${API_BASE}/api/structured/book/${bookId}`, {
+    const response = await axiosInstance.get(`${API_BASE}/api/structured/book/${bookId}`, {
       headers: getAuthHeaders(),
     });
     console.log("fetchBookStructuredData response:", response.data);
@@ -63,7 +65,7 @@ export const fetchProjectStructuredData = async (
       collectionIds,
       bookIds,
     });
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/structured/project/${projectId}`,
       { collectionIds, bookIds },
       {
@@ -87,7 +89,7 @@ export const fetchProjectStructuredData = async (
 
 export const downloadBookStructuredExcel = async (bookId: string): Promise<{ blobUrl: string, filename: string }> => {
   try {
-    const response = await axios.get(
+    const response = await axiosInstance.get(
       `${API_BASE}/api/structured/book/${bookId}/export-excel`,
       {
         headers: getAuthHeaders(),
@@ -121,7 +123,7 @@ export const downloadProjectStructuredExcel = async (
   bookIds: string[] = []
 ): Promise<{ blobUrl: string; filename: string }> => {
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/structured/project/${projectId}/export-excel`,
       { collectionIds, bookIds },
       {

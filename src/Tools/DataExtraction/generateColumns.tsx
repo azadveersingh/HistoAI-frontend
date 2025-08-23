@@ -11,6 +11,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { isValid } from "date-fns";
 import axios from "axios";
 
+
 const FILTERABLE_COLUMNS = [
   "Event Name",
   "Description",
@@ -148,17 +149,22 @@ export const generateColumns = (
               const response = await axios.get(fullUrl, {
                 headers: {
                   Authorization: `Bearer ${token}`,
+                    'ngrok-skip-browser-warning': 'true',
                 },
                 responseType: "blob",
               });
-              const blobUrl = URL.createObjectURL(response.data);
+              console.log("response on handle click - ", response.data)
+              // const blobUrl = URL.createObjectURL(response.data);
+              const blob = new Blob([response.data], { type: "application/pdf" });
+              const blobUrl = URL.createObjectURL(blob);
+              console.log("blobUrl -------------", blobUrl)
               const finalUrl = pageFragment ? `${blobUrl}#${pageFragment}` : blobUrl;
               console.log(`Opening PDF: ${finalUrl}`);
               window.open(finalUrl, "_blank");
               // Revoke blob URL after a short delay to ensure it opens
               setTimeout(() => {
                 URL.revokeObjectURL(blobUrl);
-                console.log(`Revoked blob URL: ${blobUrl}`);
+                // console.log(`Revoked blob URL: ${blobUrl}`);
               }, 1000);
             } catch (error: any) {
               console.error("Error fetching PDF:", error);

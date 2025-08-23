@@ -80,10 +80,21 @@ export default function UserDropdown() {
   }, []);
 
   // Generate initials from fullName
-  const getInitials = (fullName: string) => {
-    const [first, last] = fullName.split(" ");
-    return `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase();
-  };
+  // const getInitials = (fullName: string) => {
+  //   const [first, last] = fullName.split(" ");
+  //   return `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase();
+  // };
+
+
+  const getInitials = (fullName?: string) => {
+  if (!fullName) return ""; // guard against undefined/null
+  const parts = fullName.trim().split(" ");
+  if (parts.length === 1) {
+    return parts[0][0]?.toUpperCase() ?? "";
+  }
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+};
+
 
   function toggleDropdown() {
     setIsOpen(!isOpen);

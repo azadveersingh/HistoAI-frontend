@@ -1,8 +1,10 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
 
 export const registerInit = async (firstName: string, lastName:string, email: string, password: string, confirmPassword:string) => {
-  const response = await axios.post(`${API_BASE}/api/register-init`, {
+  const response = await axiosInstance.post(`${API_BASE}/api/register-init`, {
     firstName,
     lastName,
     email,
@@ -14,7 +16,7 @@ export const registerInit = async (firstName: string, lastName:string, email: st
 
 export const signin = async (email: string, password: string) => {
   try {
-    const response = await axios.post(`${API_BASE}/api/login`, {
+    const response = await axiosInstance.post(`${API_BASE}/api/login`, {
       email,
       password,
     });
@@ -27,7 +29,7 @@ export const signin = async (email: string, password: string) => {
 
 
 export const verifyOtp = async (otp: string, tempToken: string) => {
-  const response = await axios.post(`${API_BASE}/api/register`, {
+  const response = await axiosInstance.post(`${API_BASE}/api/register`, {
     otp,
     temp_token: tempToken,
   });
@@ -35,7 +37,7 @@ export const verifyOtp = async (otp: string, tempToken: string) => {
 };
 
 export const googleLogin = async (token: string) => {
-  const response = await axios.post(`${API_BASE}/api/google-login`, {
+  const response = await axiosInstance.post(`${API_BASE}/api/google-login`, {
     token,
   });
   return response.data;

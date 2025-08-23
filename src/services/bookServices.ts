@@ -1,6 +1,8 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
-
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
+const token = localStorage.getItem("token");
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   if (!token) {
@@ -18,7 +20,7 @@ export const uploadBooks = async (formData: FormData) => {
   }
 
   try {
-    const response = await axios.post(`${API_BASE}/api/books/upload`, formData, {
+    const response = await axiosInstance.post(`${API_BASE}/api/books/upload`, formData, {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "multipart/form-data",
@@ -34,8 +36,12 @@ export const uploadBooks = async (formData: FormData) => {
 
 export const fetchAllBooks = async (visibilityFilter: "public" | "all" = "public") => {
   try {
-    const response = await axios.get(`${API_BASE}/api/books/`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
     });
     console.log("fetchAllBooks response:", response.data);
     const books = response.data.books || [];
@@ -68,8 +74,12 @@ export const fetchAllBooks = async (visibilityFilter: "public" | "all" = "public
 
 export const fetchProcessingBooks = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/api/books/processing`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/processing`, {
+      // // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
     });
     console.log("fetchProcessingBooks response:", response.data);
     const books = response.data.books || [];
@@ -101,7 +111,7 @@ export const fetchProcessingBooks = async () => {
 export const deleteBooks = async (bookIds: string[]) => {
   try {
     console.log("deleteBooks: Sending request to delete books:", bookIds);
-    const response = await axios.post(`${API_BASE}/api/books/delete`, { bookIds }, {
+    const response = await axiosInstance.post(`${API_BASE}/api/books/delete`, { bookIds }, {
       headers: {
         ...getAuthHeaders(),
         "Content-Type": "application/json",
@@ -120,11 +130,15 @@ export const updateBookVisibility = async (
   visibility: "private" | "public"
 ) => {
   try {
-    const response = await axios.patch(
+    const response = await axiosInstance.patch(
       `${API_BASE}/api/books/${bookId}/visibility`,
       { visibility },
       {
-        headers: getAuthHeaders(),
+        // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
       }
     );
     console.log("updateBookVisibility: Response received:", response.data);
@@ -137,7 +151,7 @@ export const updateBookVisibility = async (
 
 export const completeOcrProcess = async (bookId: string) => {
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/books/${bookId}/ocr/complete`,
       {},
       { headers: getAuthHeaders() }
@@ -152,7 +166,7 @@ export const completeOcrProcess = async (bookId: string) => {
 
 export const addBooksToProject = async (projectId: string, bookIds: string[]) => {
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/books/${projectId}/add`,
       { bookIds },
       { headers: getAuthHeaders() }
@@ -167,7 +181,7 @@ export const addBooksToProject = async (projectId: string, bookIds: string[]) =>
 
 export const removeBooksFromProject = async (projectId: string, bookIds: string[]) => {
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/books/${projectId}/remove`,
       { bookIds },
       { headers: getAuthHeaders() }
@@ -182,8 +196,12 @@ export const removeBooksFromProject = async (projectId: string, bookIds: string[
 
 export const fetchProjectBooks = async (projectId: string) => {
   try {
-    const response = await axios.get(`${API_BASE}/api/books/projects/${projectId}/books`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/projects/${projectId}/books`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
     });
     console.log("fetchProjectBooks response:", response.data);
     const books = response.data.books || [];
@@ -216,8 +234,12 @@ export const fetchProjectBooks = async (projectId: string) => {
 
 export const fetchProjectsForBook = async (bookId: string) => {
   try {
-    const response = await axios.get(`${API_BASE}/api/books/${bookId}/projects`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/${bookId}/projects`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
     });
     console.log("fetchProjectsForBook response:", response.data);
     const projects = response.data.projects || [];
@@ -243,7 +265,7 @@ export const updateBookDetails = async (
 ) => {
   try {
     console.log("updateBookDetails: Sending request to update book:", bookId, bookData);
-    const response = await axios.patch(
+    const response = await axiosInstance.patch(
       `${API_BASE}/api/books/${bookId}/update`,
       bookData,
       {
@@ -266,8 +288,12 @@ export const fetchBookFile = async (previewUrl: string): Promise<string> => {
     console.log(`fetchBookFile: Fetching book file: ${previewUrl}`);
     const cleanPath = previewUrl.replace(`${API_BASE}/Uploads/book/`, "").replace(/^\/+/, "");
     console.log(`fetchBookFile: Cleaned path: ${cleanPath}`);
-    const response = await axios.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
       responseType: "blob",
     });
     const blobUrl = URL.createObjectURL(response.data);
@@ -287,8 +313,12 @@ export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise
     console.log(`fetchBookPreviewImage: Fetching preview image: ${frontPageImagePath}`);
     const cleanPath = frontPageImagePath.replace(`${API_BASE}/Uploads/book/`, "").replace(/^\/+/, "");
     console.log(`fetchBookPreviewImage: Cleaned path: ${cleanPath}`);
-    const response = await axios.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/Uploads/book/${cleanPath}`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
       responseType: "blob",
     });
     const blobUrl = URL.createObjectURL(response.data);
@@ -306,8 +336,12 @@ export const fetchBookPreviewImage = async (frontPageImagePath: string): Promise
 export const fetchOcrText = async (bookId: string): Promise<string> => {
   try {
     console.log(`fetchOcrText: Fetching OCR text for book: ${bookId}`);
-    const response = await axios.get(`${API_BASE}/api/books/${bookId}/ocr/text`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/${bookId}/ocr/text`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
       responseType: "blob",
     });
     const blobUrl = URL.createObjectURL(response.data);
@@ -333,8 +367,12 @@ export const fetchOcrText = async (bookId: string): Promise<string> => {
 export const fetchOcrZip = async (bookId: string): Promise<string> => {
   try {
     console.log(`fetchOcrZip: Fetching OCR ZIP for book: ${bookId}`);
-    const response = await axios.get(`${API_BASE}/api/books/${bookId}/ocr/zip`, {
-      headers: getAuthHeaders(),
+    const response = await axiosInstance.get(`${API_BASE}/api/books/${bookId}/ocr/zip`, {
+      // headers: getAuthHeaders(),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
       responseType: "blob",
     });
     const blobUrl = URL.createObjectURL(response.data);

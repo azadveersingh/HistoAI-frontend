@@ -1,5 +1,7 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
 
 // Get JWT auth headers
 const getAuthHeaders = () => {
@@ -11,7 +13,7 @@ const getAuthHeaders = () => {
 
 // ------------------ GET: My Projects ------------------
 export const fetchMyProjects = async () => {
-  const response = await axios.get(`${API_BASE}/api/projects/my`, {
+  const response = await axiosInstance.get(`${API_BASE}/api/projects/my`, {
     headers: getAuthHeaders(),
   });
   return response.data.projects;
@@ -19,7 +21,7 @@ export const fetchMyProjects = async () => {
 
 // ------------------ GET: Specific My Project ------------------
 export const fetchMyProjectById = async (projectId: string) => {
-  const response = await axios.get(
+  const response = await axiosInstance.get(
     `${API_BASE}/api/projects/my/${projectId}`,
     {
       headers: getAuthHeaders(),
@@ -30,7 +32,7 @@ export const fetchMyProjectById = async (projectId: string) => {
 
 // ------------------ GET: Any Project by ID (admin/debug only) ------------------
 export const fetchProjectById = async (projectId: string) => {
-  const response = await axios.get(`${API_BASE}/api/projects/${projectId}`, {
+  const response = await axiosInstance.get(`${API_BASE}/api/projects/${projectId}`, {
     headers: getAuthHeaders(),
   });
   return response.data;
@@ -44,7 +46,7 @@ export const createProject = async (projectData: {
   bookIds?: string[];
   chatHistoryId?: string;
 }) => {
-  const response = await axios.post(`${API_BASE}/api/projects`, projectData, {
+  const response = await axiosInstance.post(`${API_BASE}/api/projects`, projectData, {
     headers: getAuthHeaders(),
   });
   return response.data;
@@ -61,7 +63,7 @@ export const updateProject = async (
     chatHistoryId: string;
   }>
 ) => {
-  const response = await axios.patch(
+  const response = await axiosInstance.patch(
     `${API_BASE}/api/projects/${projectId}`,
     updateData,
     {
@@ -73,7 +75,7 @@ export const updateProject = async (
 
 // ------------------ DELETE: Delete Project ------------------
 export const deleteProject = async (projectId: string) => {
-  const response = await axios.delete(`${API_BASE}/api/projects/${projectId}`, {
+  const response = await axiosInstance.delete(`${API_BASE}/api/projects/${projectId}`, {
     headers: getAuthHeaders(),
   });
   return response.data;

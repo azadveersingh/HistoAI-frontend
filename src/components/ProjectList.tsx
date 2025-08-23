@@ -75,19 +75,26 @@ const ProjectList: React.FC<ProjectListProps> = ({ onProjectSelect }) => {
           });
           projectsData = (await res.json()).projects;
         } else if (['project_manager', 'book_manager'].includes(role)) {
-          projectsData = await fetchMyProjects();
+          // projectsData = await fetchMyProjects();
+          projectsData = (await fetchMyProjects()) ?? [];
+          console.log("Fetched projectsData:", projectsData);
+
         } else if (role === 'user') {
           const res = await fetch('/api/projects/user', {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
           });
-          projectsData = (await res.json()).projects;
+          projectsData = (await res.json()).projects ?? [];
         }
     
         const users = await fetchAllUsers();
-        const userMap = new Map(users.map((u: any) => [u._id, u.fullName]));
+        // const userMap = new Map(users.map((u: any) => [u._id, u.fullName]));
     
+        const userMap = new Map(
+  Array.isArray(users?.users) ? users.users.map((u: any) => [u._id, u.fullName]) : []
+);
+
         projectsData.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );

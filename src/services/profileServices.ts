@@ -1,6 +1,8 @@
 
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
 
 interface User {
   fullName: string;
@@ -17,7 +19,7 @@ interface UpdateProfileData {
 
 export const getProfile = async (): Promise<User> => {
   try {
-    const response = await axios.get(`${API_BASE}/user/api/profile`, {
+    const response = await axiosInstance.get(`${API_BASE}/user/api/profile`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -31,7 +33,7 @@ export const getProfile = async (): Promise<User> => {
 
 export const updateProfile = async (data: UpdateProfileData): Promise<User> => {
   try {
-    const response = await axios.put(`${API_BASE}/user/api/profile`, data, {
+    const response = await axiosInstance.put(`${API_BASE}/user/api/profile`, data, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
@@ -49,7 +51,7 @@ export const updateProfileWithImage = async (fullName: string, file: File | null
     if (fullName) formData.append("fullName", fullName);
     if (file) formData.append("avatar", file);
     
-    const response = await axios.put(`${API_BASE}/user/api/profile`, formData, {
+    const response = await axiosInstance.put(`${API_BASE}/user/api/profile`, formData, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
         "Content-Type": "multipart/form-data",

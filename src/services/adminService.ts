@@ -1,9 +1,11 @@
 import axios from "axios";
 import { api as API_BASE } from "../api/api";
+import axiosWithAuth from "../utils/axiosWithAuth";
+const axiosInstance = axiosWithAuth();
 
 export const fetchAllUsers = async () => {
   const token = localStorage.getItem("token");
-  const response = await axios.get(`${API_BASE}/api/admin/users`, {
+  const response = await axiosInstance.get(`${API_BASE}/api/admin/users`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -15,7 +17,7 @@ export const fetchAllUsers = async () => {
 export const fetchProjectMembers = async (projectId: string) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_BASE}/api/admin/projects/${projectId}/members`, {
+    const response = await axiosInstance.get(`${API_BASE}/api/admin/projects/${projectId}/members`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -36,7 +38,7 @@ export const fetchProjectMembers = async (projectId: string) => {
 export const addMembersToProject = async (projectId: string, memberIds: string[]) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/admin/projects/${projectId}/members`,
       { memberIds },
       {
@@ -56,7 +58,7 @@ export const addMembersToProject = async (projectId: string, memberIds: string[]
 export const removeMembersFromProject = async (projectId: string, memberIds: string[]) => {
   try {
     const token = localStorage.getItem("token");
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${API_BASE}/api/admin/projects/${projectId}/members/remove`,
       { memberIds },
       {
@@ -75,7 +77,7 @@ export const removeMembersFromProject = async (projectId: string, memberIds: str
 
 export const updateUserStatus = async (userId: string, isActive: boolean) => {
   const token = localStorage.getItem("token");
-  const response = await axios.patch(
+  const response = await axiosInstance.patch(
     `${API_BASE}/api/admin/users/${userId}`,
     { isActive },
     {
@@ -90,7 +92,7 @@ export const updateUserStatus = async (userId: string, isActive: boolean) => {
 export const changeUserRole = async (userId: string, newRole: string) => {
   const token = localStorage.getItem("token");
   try {
-    const response = await axios.patch(
+    const response = await axiosInstance.patch(
       `${API_BASE}/api/admin/users/${userId}/role`,
       { role: newRole },
       {

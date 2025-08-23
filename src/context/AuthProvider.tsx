@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
                 const res = await axios.get("/api/checkLogged", {
                     headers: {
+                        baseURL: import.meta.env.VITE_API_URL,
                         Authorization: `Bearer ${storedToken}`,
                     },
                 });
@@ -75,6 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             const res = await axios.post("/api/login", { email, password });
             const token = res.data.access_token;
+
+            console.log("response-----------", res)
             if (!token) {
                 throw new Error("No token received");
             }
@@ -86,6 +89,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     Authorization: `Bearer ${token}`,
                 },
             });
+
+            console.log("res 94 ---", userRes)
             if (!userRes.data.user) {
                 console.error("Invalid user response from /api/checkLogged:", userRes.data);
                 throw new Error("No user data received");
