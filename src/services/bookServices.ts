@@ -3,6 +3,9 @@ import { api as API_BASE } from "../api/api";
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No authentication token found");
+  }
   return {
     Authorization: `Bearer ${token}`,
   };
@@ -309,6 +312,14 @@ export const fetchOcrText = async (bookId: string): Promise<string> => {
     });
     const blobUrl = URL.createObjectURL(response.data);
     console.log(`fetchOcrText: Blob URL created: ${blobUrl}`);
+    // Trigger automatic download
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = `${bookId}_OCR.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
     return blobUrl;
   } catch (error: any) {
     console.error(
@@ -319,21 +330,21 @@ export const fetchOcrText = async (bookId: string): Promise<string> => {
   }
 };
 
-export const fetchStructuredData = async (bookId: string): Promise<string> => {
+export const fetchOcrZip = async (bookId: string): Promise<string> => {
   try {
-    console.log(`fetchStructuredData: Fetching structured data for book: ${bookId}`);
-    const response = await axios.get(`${API_BASE}/api/books/${bookId}/structured-data`, {
+    console.log(`fetchOcrZip: Fetching OCR ZIP for book: ${bookId}`);
+    const response = await axios.get(`${API_BASE}/api/books/${bookId}/ocr/zip`, {
       headers: getAuthHeaders(),
       responseType: "blob",
     });
     const blobUrl = URL.createObjectURL(response.data);
-    console.log(`fetchStructuredData: Blob URL created: ${blobUrl}`);
+    console.log(`fetchOcrZip: Blob URL created: ${blobUrl}`);
     return blobUrl;
   } catch (error: any) {
     console.error(
-      "fetchStructuredData: Error:",
+      "fetchOcrZip: Error:",
       error.response ? { status: error.response.status, data: error.response.data } : error.message
     );
-    throw new Error(error.response?.data?.error || "Failed to fetch structured data file");
+    throw new Error(error.response?.data?.error || "Failed to fetch OCR ZIP file");
   }
 };

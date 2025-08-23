@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails, fetchBookPreviewImage, fetchBookFile, fetchOcrText } from "../../services/bookServices";
+import { fetchAllBooks, fetchProjectBooks, addBooksToProject, deleteBooks, updateBookVisibility, fetchProjectsForBook, updateBookDetails, fetchBookPreviewImage, fetchBookFile, fetchOcrZip } from "../../services/bookServices";
 import { fetchCollectionById, updateCollection } from "../../services/collectionServices";
 import Checkbox from "../../components/form/input/Checkbox";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -360,27 +360,28 @@ export default function AllBooks({
     }
   };
 
-  const handleDownloadOcrText = async (bookId: string, bookName: string) => {
+  const handleDownloadOcrZip = async (bookId: string, bookName: string) => {
     try {
-      const blobUrl = await fetchOcrText(bookId);
+      const blobUrl = await fetchOcrZip(bookId);
+      const safeBookName = bookName.replace(/[^a-zA-Z0-9-_]/g, '_') || "Untitled";
       const link = document.createElement("a");
       link.href = blobUrl;
-      link.download = `${bookName || "Untitled"}_OCR.txt`;
+      link.download = `${safeBookName}_OCR_output.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(blobUrl);
       setAlert({
         variant: "success",
-        title: "OCR Text Downloaded",
-        message: `OCR text file for "${bookName || "Untitled"}" downloaded successfully.`,
+        title: "OCR ZIP Downloaded",
+        message: `OCR ZIP file for "${bookName || "Untitled"}" downloaded successfully.`,
       });
     } catch (err: any) {
-      console.error("Error downloading OCR text:", err);
+      console.error("Error downloading OCR ZIP:", err);
       setAlert({
         variant: "error",
         title: "Error",
-        message: err.message || "Failed to download OCR text file.",
+        message: err.message || "Failed to download OCR ZIP file.",
       });
     }
   };
@@ -497,7 +498,7 @@ export default function AllBooks({
 
   if (loading) return (
     <div className="text-sm sm:text-base text-gray-800 dark:text-gray-100">
-      Loading {isCentralRepository ? "books" : "public books"}...
+      Loading {isCentralRepository ? "books" : "All books"}...
     </div>
   );
   if (error) return (
@@ -509,7 +510,7 @@ export default function AllBooks({
       title={
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2 sm:gap-4">
           <span className="text-xl sm:text-2xl md:text-3xl text-center block text-gray-900 dark:text-gray-100">
-            {isCentralRepository ? "Central Repository" : "Public Books"}
+            {isCentralRepository ? "Central Repository" : "All Books"}
           </span>
           <div className="flex flex-wrap gap-2">
             {isCentralRepository && role === "book_manager" && (
@@ -585,7 +586,7 @@ export default function AllBooks({
               {filteredBooks.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={isCentralRepository ? 9 : 6} className="p-2 sm:p-4 text-center text-gray-500 dark:text-gray-400 text-sm sm:text-base">
-                    {isCentralRepository ? "No books found" : "No public books found"}
+                    {isCentralRepository ? "No books found" : "No books found"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -698,7 +699,7 @@ export default function AllBooks({
                         <TableCell className="w-1/6 p-2 sm:p-4">
                           <Button
                             variant="primary"
-                            onClick={() => handleDownloadOcrText(book._id, book.bookName)}
+                            onClick={() => handleDownloadOcrZip(book._id, book.bookName)}
                             className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white rounded-md"
                           >
                             Download OCR

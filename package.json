@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@date-io/date-fns": "^3.2.1",
     "@fullcalendar/core": "^6.1.15",
     "@fullcalendar/daygrid": "^6.1.15",
     "@fullcalendar/interaction": "^6.1.15",
@@ -17,6 +18,7 @@
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
     "@heroicons/react": "^2.2.0",
+    "@mui/x-date-pickers": "^8.10.2",
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "@react-pdf-viewer/core": "^3.12.0",
@@ -24,6 +26,7 @@
     "apexcharts": "^4.1.0",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.10",
@@ -47,7 +50,8 @@
     "react-toastify": "^11.0.5",
     "socket.io-client": "^4.8.1",
     "swiper": "^11.2.10",
-    "tailwind-merge": "^3.0.1"
+    "tailwind-merge": "^3.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

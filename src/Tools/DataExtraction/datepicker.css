@@ -1,0 +1,22 @@
+/* src/datepicker.css */
+.high-z-index-datepicker .react-datepicker {
+  z-index: 100000000 !important;
+}
+
+.high-z-index-datepicker .react-datepicker__triangle {
+  z-index: 100000000 !important;
+}
+
+.high-z-index-datepicker .react-datepicker-popper {
+  z-index: 100000000 !important;
+  position: absolute !important;
+  top: 0 !important;
+  transform: translate3d(0, 100%, 0) !important; /* Position below the input */
+  width: auto !important;
+  max-width: 300px !important; /* Prevent overflow */
+}
+
+/* Ensure compatibility with Tailwind's z-index utilities */
+.high-z-index-datepicker {
+  z-index: 100000000 !important;
+}
