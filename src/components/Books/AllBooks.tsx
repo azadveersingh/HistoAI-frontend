@@ -612,7 +612,7 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             label=""
                             className="text-gray-700 dark:text-gray-200 scale-100"
                             aria-label={`Book ${book.bookName || "Untitled Book"} already in collection`}
@@ -624,7 +624,7 @@ export default function AllBooks({
                             id={`book-${book._id}`}
                             checked={true}
                             disabled={true}
-                            onChange={() => {}}
+                            onChange={() => { }}
                             label=""
                             className="text-gray-700 dark:text-gray-200 scale-100"
                             aria-label={`Book ${book.bookName || "Untitled Book"} already in project`}
@@ -700,10 +700,11 @@ export default function AllBooks({
                           <Button
                             variant="primary"
                             onClick={() => handleDownloadOcrZip(book._id, book.bookName)}
-                            className="text-xs sm:text-sm py-1 px-2 sm:px-3 bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white rounded-md"
+                            className="text-[10px] py-0.5 px-1.5 bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white rounded"
                           >
-                            Download OCR
+                            Download Zip
                           </Button>
+
                         </TableCell>
                       </>
                     )}

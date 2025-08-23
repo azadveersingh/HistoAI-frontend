@@ -176,6 +176,8 @@ const ExcelViewer: React.FC = () => {
           enableRowNumbers={true}
           enableFullScreenToggle
           enablePagination={false}
+          enableDensityToggle={false}
+
           columnResizeMode="onChange"
           initialState={{
             density: "compact",
@@ -353,45 +355,42 @@ const ExcelViewer: React.FC = () => {
                 handlePrev={handlePrev}
                 handleNext={handleNext}
               />
-              <div
-                className="flex items-center gap-2 relative group"
-                onMouseEnter={() => setIsSearchOpen(true)}
-                onMouseLeave={() => {
-                  if (!globalFilter) setIsSearchOpen(false);
-                }}
-              >
-                <button
-                  onClick={() => {
-                    if (isSearchOpen) {
-                      setIsSearchOpen(false);
-                      setGlobalFilter("");
-                    } else {
-                      setIsSearchOpen(true);
-                      setTimeout(() => {
-                        const input = document.getElementById("search-input");
-                        input?.focus();
-                      }, 100);
-                    }
-                  }}
-                  className="text-gray-600 hover:text-blue-600 transition-colors duration-200 p-1"
-                  title="Search"
-                >
-                  <FaSearch className="text-lg" />
-                </button>
-                <input
-                  id="search-input"
-                  type="text"
-                  placeholder="Search..."
-                  value={globalFilter ?? ""}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  onBlur={handleSearchBlur}
-                  className={`transition-all duration-300 ease-in-out border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 shadow-sm
-                    ${isSearchOpen || globalFilter
-                      ? "w-48 opacity-100 ml-2"
-                      : "w-0 opacity-0 ml-0 pointer-events-none"
-                    }`}
-                />
-              </div>
+              <div className="flex items-center gap-2 relative">
+  <button
+    onClick={() => {
+      if (isSearchOpen) {
+        setIsSearchOpen(false);
+        setGlobalFilter("");
+      } else {
+        setIsSearchOpen(true);
+        // focus directly without setTimeout
+        requestAnimationFrame(() => {
+          const input = document.getElementById("search-input") as HTMLInputElement | null;
+          input?.focus();
+        });
+      }
+    }}
+    className="text-gray-600 hover:text-blue-600 transition-colors duration-200 p-1"
+    title="Search"
+  >
+    <FaSearch className="text-lg" />
+  </button>
+
+  <input
+    id="search-input"
+    type="text"
+    placeholder="Search..."
+    value={globalFilter ?? ""}
+    onChange={(e) => setGlobalFilter(e.target.value)}
+    onBlur={handleSearchBlur}
+    className={`transition-all duration-200 ease-in-out border border-gray-300 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 shadow-sm
+      ${isSearchOpen || globalFilter
+        ? "w-48 opacity-100 ml-2"
+        : "w-0 opacity-0 ml-0 pointer-events-none"
+      }`}
+  />
+</div>
+
             </div>
           )}
         />

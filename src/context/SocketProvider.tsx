@@ -51,22 +51,22 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
 
     newSocket.on("connect", () => {
       console.log("Connected to WebSocket server");
-      toast.success("Connected to WebSocket server", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-        toastId: "websocket-connect",
-      });
+      // toast.success("Connected to WebSocket server", {
+      //   position: "top-right",
+      //   autoClose: 3000,
+      //   theme: "colored",
+      //   toastId: "websocket-connect",
+      // });
     });
 
     newSocket.on("connect_error", (error) => {
       console.error("WebSocket connection error:", error);
-      toast.error("WebSocket connection failed. Retrying...", {
-        position: "top-right",
-        autoClose: 3000,
-        theme: "colored",
-        toastId: "websocket-connect-error",
-      });
+      // toast.error("WebSocket connection failed. Retrying...", {
+      //   position: "top-right",
+      //   autoClose: 3000,
+      //   theme: "colored",
+      //   toastId: "websocket-connect-error",
+      // });
     });
 
     newSocket.on("disconnect", () => {

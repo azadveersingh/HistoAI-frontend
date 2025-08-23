@@ -97,11 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             localStorage.setItem("user", JSON.stringify(userRes.data.user));
             console.log("Signed in user:", userRes.data.user);
 
-            toast.success("Successfully signed in!", {
-                position: "top-right",
-                autoClose: 3000,
-                theme: "colored",
-            });
+            // toast.success("Successfully signed in!", {
+            //     position: "top-right",
+            //     autoClose: 3000,
+            //     theme: "colored",
+            // });
 
             return res.data.role; // Return the role for redirection
         } catch (err) {
