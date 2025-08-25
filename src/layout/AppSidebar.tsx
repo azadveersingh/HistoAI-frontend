@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useNavigate } from "react-router-dom";
 import ManageCollectionModal from "../components/ui/modal/ManageCollectionModal";
@@ -13,8 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { useSidebar } from "../context/SidebarContext";
-
-const role = localStorage.getItem("role");
+import { useAuth } from "../context/AuthProvider"; // Import useAuth
 
 type NavItem = {
   name: string;
@@ -23,57 +22,62 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
-const navItems: NavItem[] = [
-  {
-    icon: <LayoutGrid className="w-6 h-6" strokeWidth={1.5} />,
-    name: "Projects",
-    path: "/dashboard",
-  },
-  ...(role === "admin"
-    ? [
-        {
-          icon: <Users className="w-6 h-6" strokeWidth={1.5} />,
-          name: "All Users",
-          path: "/admin/users",
-        },
-      ]
-    : []),
-  ...(role === "project_manager" || role === "book_manager"
-    ? [
-        {
-          icon: <FilePlus className="w-6 h-6" strokeWidth={1.5} />,
-          name: "Create Projects",
-          path: "/dashboard/projects/create",
-        },
-      ]
-    : []),
-  ...(role === "book_manager"
-    ? [
-        {
-          icon: <BookOpen className="w-6 h-6" strokeWidth={1.5} />,
-          name: "Manage Books",
-          path: "/books/manage",
-        },
-      ]
-    : []),
-  ...(role === "project_manager" || role === "book_manager"
-    ? [
-        {
-          icon: <FolderPlus className="w-6 h-6" strokeWidth={1.5} />,
-          name: "Manage Collections",
-          path: "/dashboard/collections",
-        },
-      ]
-    : []),
-];
-
-const othersItems: NavItem[] = [];
-
 const AppSidebar: React.FC = () => {
   const { isAppSidebarExpanded, isAppSidebarMobileOpen, toggleAppSidebar, toggleAppSidebarMobile } = useSidebar();
+  const { role } = useAuth(); // Get role from useAuth
   const location = useLocation();
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Define navItems inside the component, dependent on role
+  const navItems: NavItem[] = useMemo(
+    () => [
+      {
+        icon: <LayoutGrid className="w-6 h-6" strokeWidth={1.5} />,
+        name: "Projects",
+        path: "/dashboard",
+      },
+      ...(role === "admin"
+        ? [
+            {
+              icon: <Users className="w-6 h-6" strokeWidth={1.5} />,
+              name: "All Users",
+              path: "/admin/users",
+            },
+          ]
+        : []),
+      ...(role === "project_manager" || role === "book_manager"
+        ? [
+            {
+              icon: <FilePlus className="w-6 h-6" strokeWidth={1.5} />,
+              name: "Create Projects",
+              path: "/dashboard/projects/create",
+            },
+          ]
+        : []),
+      ...(role === "book_manager"
+        ? [
+            {
+              icon: <BookOpen className="w-6 h-6" strokeWidth={1.5} />,
+              name: "Manage Books",
+              path: "/books/manage",
+            },
+          ]
+        : []),
+      ...(role === "project_manager" || role === "book_manager"
+        ? [
+            {
+              icon: <FolderPlus className="w-6 h-6" strokeWidth={1.5} />,
+              name: "Manage Collections",
+              path: "/dashboard/collections",
+            },
+          ]
+        : []),
+    ],
+    [role] // Recompute navItems when role changes
+  );
+
+  const othersItems: NavItem[] = [];
 
   const openManageModal = () => setIsManageModalOpen(true);
   const closeManageModal = () => setIsManageModalOpen(false);
@@ -123,7 +127,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [location, isActive]);
+  }, [location, isActive, navItems]); // Add navItems to dependencies
 
   useEffect(() => {
     if (openSubmenu !== null) {
