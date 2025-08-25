@@ -4,7 +4,6 @@ import PageMeta from '../../components/common/PageMeta';
 import ProjectDetailModal from '../../components/Projects/ProjectDetailModal';
 import ProjectList from '../../components/ProjectList';
 import { fetchProjectById } from '../../services/projectService';
-
 interface Project {
   _id: string;
   name: string;

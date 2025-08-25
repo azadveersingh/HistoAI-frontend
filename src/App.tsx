@@ -65,6 +65,9 @@ export default function App() {
               }
             >
               <Route path="/dashboard" element={<Home />} />
+              
+              {/* <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["admin", "project_manager", "book_manager", "user"]}> <Home /> </ProtectedRoute>} /> */}
+              
               <Route
                 path="/admin/users"
                 element={

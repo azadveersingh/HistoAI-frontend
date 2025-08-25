@@ -41,11 +41,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     console.log("No token found, setting user to null");
                     return;
                 }
+
+                console.log("Fetching user with token:", storedToken);
                 const res = await axios.get("/api/checkLogged", {
                     headers: {
                         Authorization: `Bearer ${storedToken}`,
                     },
                 });
+                console.log("User fetch response:", res.data);
                 if (!res.data.user) {
                     console.error("Invalid user response from /api/checkLogged:", res.data);
                     throw new Error("No user data received");
